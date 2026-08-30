@@ -1,0 +1,402 @@
+---
+import { readFile } from 'node:fs/promises';
+import type { ImageMetadata } from 'astro';
+import config from 'virtual:astro-gallery/config';
+import { resolveAlt } from '../internal/alt.js';
+import { readPhotoMeta } from '../internal/exif.js';
+import { fixedImage } from '../internal/images.js';
+import { createGeocoder } from '../internal/geocode.js';
+import { basename, resolveFolder, selectFolderEntries, toAbsolute } from '../internal/paths.js';
+import { imageGalleryJsonLd, type LdImage } from '../internal/structured-data.js';
+import { withApiKey } from '../internal/tiles.js';
+import { getBasemap, type BasemapId } from '../internal/basemaps.js';
+import 'leaflet/dist/leaflet.css';
+import '../styles/gallery.css';
+
+interface Props {
+  /** Folder relative to `src/<imagesDir>/`. Images without GPS EXIF are skipped. */
+  folderPath: string;
+  baseDir?: string;
+  locale?: string;
+  /** Reverse-geocode a label for each marker popup. Defaults to the integration setting. */
+  geocode?: boolean;
+  /** Per-file alt overrides, keyed by file name. */
+  alt?: Record<string, string>;
+  /** Album / gallery name — used for the accessible label, fallback alt and JSON-LD. */
+  album?: string;
+  /** Emit `ImageGallery` JSON-LD. Defaults to the integration setting. */
+  structuredData?: boolean;
+  /**
+   * Named basemap preset: `"osm"` | `"carto-dark"` | `"carto-light"` |
+   * `"carto-voyager"` | `"stadia-dark"` | `"esri-satellite"`. Fills in the tile
+   * URL / attribution / zoom and the control-chrome scheme. `tileUrl` overrides it.
+   */
+  basemap?: BasemapId;
+  /** Control-chrome scheme: `"auto"` (page theme), `"light"` or `"dark"`. */
+  scheme?: 'auto' | 'light' | 'dark';
+  /** Per-instance overrides for the map / consent gate (see `MapOptions`). */
+  tileUrl?: string;
+  tileAttribution?: string;
+  /** API key appended to tile requests (CARTO, Stadia, MapTiler, …). */
+  tileApiKey?: string;
+  /** Query-parameter name for `tileApiKey`. Default `"api_key"`. */
+  tileApiKeyParam?: string;
+  consent?: boolean;
+  consentKey?: string;
+  consentTitle?: string;
+  consentText?: string;
+  consentButtonLabel?: string;
+}
+
+const props = Astro.props;
+const map = config.map;
+
+const folderPath = props.folderPath;
+const baseDir = props.baseDir ?? config.imagesDir;
+const locale = props.locale ?? config.locale;
+const geocodeEnabled = props.geocode ?? config.geocode.enabled;
+const altMap = props.alt ?? {};
+const album = props.album;
+const structuredData = props.structuredData ?? config.structuredData;
+
+// Per-instance basemap preset (falls back to whatever the integration resolved).
+const preset = props.basemap ? getBasemap(props.basemap) : null;
+const apiKey = props.tileApiKey ?? map.tileApiKey;
+const apiKeyParam = props.tileApiKeyParam ?? preset?.apiKeyParam ?? map.tileApiKeyParam;
+
+const rawTileUrl = props.tileUrl ?? preset?.tileUrl ?? map.tileUrl;
+const tileUrl = withApiKey(rawTileUrl, apiKey, apiKeyParam);
+const tileAttribution = props.tileAttribution ?? preset?.tileAttribution ?? map.tileAttribution;
+const subdomains = preset?.subdomains ?? map.subdomains;
+const maxZoom = preset?.maxZoom ?? map.maxZoom;
+const scheme = props.scheme ?? (props.basemap ? (preset?.scheme ?? 'auto') : map.scheme);
+
+if (preset?.needsKey && !apiKey.trim()) {
+  console.warn(
+    `[astro-gallery] MapGallery basemap "${props.basemap}" needs an API key — pass \`tileApiKey\` (or set \`map.tileApiKey\`).`,
+  );
+}
+const consent = props.consent ?? map.consent;
+const consentKey = props.consentKey ?? map.consentKey;
+const consentTitle = props.consentTitle ?? map.consentTitle;
+const consentText = props.consentText ?? map.consentText;
+const consentButtonLabel = props.consentButtonLabel ?? map.consentButtonLabel;
+
+interface Marker {
+  thumbSrc: string;
+  fullSrc: string;
+  width: number;
+  height: number;
+  alt: string;
+  lat: number;
+  lng: number;
+  location: string;
+  date: string;
+}
+
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/**/*.{jpg,jpeg,png,webp,avif,gif,tiff,JPG,JPEG,PNG,WEBP,AVIF,GIF,TIFF}',
+  { eager: true },
+);
+
+const target = resolveFolder(baseDir, folderPath);
+const matched = selectFolderEntries(allImages, target);
+const cwd = process.cwd();
+const geocoder = geocodeEnabled ? createGeocoder(config.geocode) : null;
+
+const markers: Marker[] = [];
+
+let index = 0;
+for (const [key, mod] of matched) {
+  index += 1;
+  let bytes: Buffer;
+  try {
+    bytes = await readFile(toAbsolute(key, cwd));
+  } catch {
+    continue;
+  }
+
+  const exif = await readPhotoMeta(bytes);
+  if (exif.latitude == null || exif.longitude == null) continue;
+
+  const meta = mod.default;
+  const [thumb, full] = await Promise.all([
+    fixedImage(meta, { width: 400, format: config.imageFormat }),
+    fixedImage(meta, { width: config.fullWidth, format: config.imageFormat }),
+  ]);
+
+  const date = exif.date
+    ? exif.date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
+    : '';
+  const location = geocoder
+    ? (await geocoder.reverseGeocode(exif.latitude, exif.longitude)).label
+    : '';
+
+  markers.push({
+    thumbSrc: thumb.src,
+    fullSrc: full.src,
+    width: thumb.width,
+    height: thumb.height,
+    alt: resolveAlt({
+      file: basename(key),
+      explicit: altMap[basename(key)],
+      description: exif.description,
+      album,
+      index,
+    }),
+    lat: exif.latitude,
+    lng: exif.longitude,
+    location,
+    date,
+  });
+}
+
+geocoder?.flush();
+
+const mapId = `asg-map-${Math.random().toString(36).slice(2, 9)}`;
+const label = album ? `${album} photo map` : 'Photo map';
+
+const jsonLd =
+  structuredData && markers.length > 0
+    ? imageGalleryJsonLd(
+        markers.map((m): LdImage => ({
+          contentUrl: m.fullSrc,
+          thumbnailUrl: m.thumbSrc,
+          name: m.alt,
+          caption: [m.location, m.date].filter(Boolean).join(' · ') || undefined,
+          width: m.width,
+          height: m.height,
+        })),
+        { name: album ?? undefined, siteUrl: Astro.site },
+      )
+    : '';
+---
+
+{
+  markers.length > 0 && (
+    <>
+      <div
+        id={mapId}
+        class="asg-map"
+        data-asg-markers={JSON.stringify(markers)}
+        data-asg-tile-url={tileUrl}
+        data-asg-tile-attribution={tileAttribution}
+        data-asg-subdomains={subdomains}
+        data-asg-max-zoom={String(maxZoom)}
+        data-asg-scheme={scheme === 'auto' ? undefined : scheme}
+        data-asg-consent={consent ? 'true' : 'false'}
+        data-asg-consent-key={consentKey}
+        role="group"
+        aria-label={label}
+      >
+        {/* Crawlable, no-JS fallback — the client script hides this once the map is built. */}
+        <ul class="asg-map__fallback" role="list" data-asg-map-fallback>
+          {markers.map((m) => (
+            <li>
+              <a href={m.fullSrc}>
+                <img
+                  src={m.thumbSrc}
+                  alt={m.alt}
+                  width={m.width}
+                  height={m.height}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </a>
+              {(m.location || m.date) && (
+                <span>{[m.location, m.date].filter(Boolean).join(' · ')}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        {consent && (
+          <div class="asg-map__consent">
+            <div class="asg-map__consent-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"
+                />
+                <circle cx="12" cy="11" r="3" />
+              </svg>
+            </div>
+            <div>
+              <h3>{consentTitle}</h3>
+              <p set:html={consentText} />
+            </div>
+            <span class="asg-map__count">{markers.length} photos with GPS data</span>
+            <button type="button" class="asg-map__consent-btn">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                />
+              </svg>
+              {consentButtonLabel}
+            </button>
+          </div>
+        )}
+      </div>
+      {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
+    </>
+  )
+}
+
+<script>
+  import L from 'leaflet';
+  import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+  import markerIcon from 'leaflet/dist/images/marker-icon.png';
+  import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+  import { openLightbox } from '../internal/lightbox.js';
+
+  const asUrl = (v: string | { src: string }) => (typeof v === 'string' ? v : v.src);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: asUrl(markerIcon2x),
+    iconUrl: asUrl(markerIcon),
+    shadowUrl: asUrl(markerShadow),
+  });
+
+  interface RawMarker {
+    thumbSrc: string;
+    fullSrc: string;
+    alt: string;
+    lat: number;
+    lng: number;
+    location: string;
+    date: string;
+  }
+
+  const esc = (s: string) =>
+    s.replace(
+      /[&<>"']/g,
+      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string,
+    );
+
+  function buildMap(container: HTMLElement): void {
+    const markers: RawMarker[] = JSON.parse(container.dataset.asgMarkers || '[]');
+    if (!markers.length) return;
+
+    // The crawlable fallback list is no longer needed once the map renders.
+    container.querySelector<HTMLElement>('[data-asg-map-fallback]')?.remove();
+
+    const canvas = document.createElement('div');
+    canvas.className = 'asg-map__canvas';
+    container.appendChild(canvas);
+
+    const bounds = L.latLngBounds(markers.map((m) => [m.lat, m.lng] as [number, number]));
+    const map = L.map(canvas, { zoomControl: true }).fitBounds(bounds, { padding: [40, 40] });
+    if (markers.length === 1) map.setZoom(13);
+    setTimeout(() => map.invalidateSize(), 120);
+
+    L.tileLayer(container.dataset.asgTileUrl!, {
+      maxZoom: Number(container.dataset.asgMaxZoom) || 19,
+      subdomains: container.dataset.asgSubdomains || 'abc',
+      attribution: container.dataset.asgTileAttribution || '',
+    }).addTo(map);
+
+    markers.forEach((m, i) => {
+      const icon = L.divIcon({
+        className: '',
+        html: `<img src="${esc(m.thumbSrc)}" class="asg-map__marker" width="44" height="44" alt="${esc(m.alt)}" />`,
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
+        popupAnchor: [0, -24],
+      });
+
+      const marker = L.marker([m.lat, m.lng], { icon, opacity: 0 }).addTo(map);
+      setTimeout(() => marker.setOpacity(1), 100 + i * 60);
+
+      const meta =
+        m.location || m.date
+          ? `<div class="asg-map__popup-meta">${[m.location, m.date]
+              .filter(Boolean)
+              .map((t) => `<span>${esc(t)}</span>`)
+              .join('')}</div>`
+          : '';
+
+      const wrap = document.createElement('div');
+      wrap.innerHTML =
+        `<a class="asg-map__popup-link" href="${esc(m.fullSrc)}">` +
+        `<img src="${esc(m.thumbSrc)}" alt="${esc(m.alt)}" loading="lazy" /></a>${meta}`;
+      wrap.querySelector('a')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        openLightbox([
+          { src: m.fullSrc, alt: m.alt, caption: [m.location, m.date].filter(Boolean).join(' · ') },
+        ]);
+      });
+
+      marker.bindPopup(
+        L.popup({ maxWidth: 280, minWidth: 240, closeButton: true }).setContent(wrap),
+      );
+    });
+  }
+
+  function handleConsent(container: HTMLElement): void {
+    const overlay = container.querySelector<HTMLElement>('.asg-map__consent');
+    const key = container.dataset.asgConsentKey || 'astro-gallery:map-consent';
+    const needsConsent = container.dataset.asgConsent === 'true';
+
+    let stored = false;
+    try {
+      stored = localStorage.getItem(key) === 'granted';
+    } catch {
+      /* storage blocked — treat as not granted */
+    }
+
+    if (!needsConsent || stored) {
+      overlay?.remove();
+      buildMap(container);
+      return;
+    }
+
+    container.querySelector<HTMLButtonElement>('.asg-map__consent-btn')?.addEventListener(
+      'click',
+      () => {
+        try {
+          localStorage.setItem(key, 'granted');
+        } catch {
+          /* ignore */
+        }
+        if (overlay) {
+          overlay.style.transition = 'opacity 300ms ease';
+          overlay.style.opacity = '0';
+          setTimeout(() => {
+            overlay.remove();
+            buildMap(container);
+          }, 300);
+        } else {
+          buildMap(container);
+        }
+      },
+      { once: true },
+    );
+  }
+
+  function initMaps(): void {
+    document.querySelectorAll<HTMLElement>('.asg-map[data-asg-markers]').forEach((container) => {
+      if (container.dataset.asgReady === 'true') return;
+      container.dataset.asgReady = 'true';
+      handleConsent(container);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMaps, { once: true });
+  } else {
+    initMaps();
+  }
+  document.addEventListener('astro:page-load', initMaps);
+  document.addEventListener('astro:after-swap', initMaps);
+</script>

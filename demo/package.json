@@ -1,0 +1,23 @@
+{
+  "name": "astro-gallery-demo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:lib": "npm --prefix .. run build",
+    "generate-samples": "node scripts/generate-sample-photos.mjs",
+    "dev": "npm run build:lib && npm run generate-samples && astro dev",
+    "build": "npm run build:lib && npm run generate-samples && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^7.2.9",
+    "astro-gallery": "file:.."
+  },
+  "devDependencies": {
+    "sharp": "^0.35.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

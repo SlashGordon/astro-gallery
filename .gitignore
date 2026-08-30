@@ -1,0 +1,22 @@
+node_modules/
+dist/
+coverage/
+
+# Astro
+.astro/
+
+# The reverse-geocode cache is meant to be committed (see README) so builds and
+# CI stay offline-friendly. The demo keeps its own under demo/.cache/ — see
+# demo/.gitignore.
+
+# misc
+*.log
+*.tgz
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Not authored in this session — see note to user
+repo-banner.png
+repo-banner.svg

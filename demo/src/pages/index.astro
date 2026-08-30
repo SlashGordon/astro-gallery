@@ -1,0 +1,184 @@
+---
+import ImageGallery from 'astro-gallery/components/ImageGallery.astro';
+import JustifiedGallery from 'astro-gallery/components/JustifiedGallery.astro';
+import ImageTimeline from 'astro-gallery/components/ImageTimeline.astro';
+import MapGallery from 'astro-gallery/components/MapGallery.astro';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>astro-gallery — demo</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fafafa;
+        --fg: #18181b;
+        --muted: #71717a;
+        --card: #fff;
+        --line: rgba(0, 0, 0, 0.1);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b0b0f;
+          --fg: #e4e4e7;
+          --muted: #a1a1aa;
+          --card: #131318;
+          --line: rgba(255, 255, 255, 0.08);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          16px/1.6 system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+      }
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 3rem 1.25rem 6rem;
+      }
+      header p {
+        color: var(--muted);
+        max-width: 60ch;
+      }
+      h1 {
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+        margin-bottom: 0.25rem;
+      }
+      h2 {
+        margin-top: 3.5rem;
+        border-top: 1px solid var(--line);
+        padding-top: 2rem;
+      }
+      code {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 0.1rem 0.35rem;
+        font-size: 0.9em;
+      }
+      .callout {
+        margin-top: 2rem;
+        padding: 0.9rem 1.1rem;
+        border-left: 3px solid currentColor;
+        background: var(--card);
+        border-radius: 0 8px 8px 0;
+        font-size: 0.95rem;
+      }
+      .theme-toggle {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.4rem 0.8rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--card);
+        color: var(--fg);
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="theme-toggle" type="button" data-theme-toggle>Toggle theme</button>
+    <main>
+      <header>
+        <h1>astro-gallery</h1>
+        <p>
+          Four folder-driven components, all reading from
+          <code>src/assets/images/demo/</code>. The photos below are generated gradients with
+          synthetic EXIF (capture date + GPS around Rome) so the timeline and map have data to work
+          with. View source to see the semantic markup and JSON-LD.
+        </p>
+      </header>
+
+      <p class="callout">
+        The next two sections render the <strong>same nine photos</strong> — deliberately a mix of landscape,
+        portrait, square and panorama (each label shows its pixel size). Only the
+        <em>layout</em> differs.
+      </p>
+
+      <h2>&lt;JustifiedGallery /&gt;</h2>
+      <p>
+        Rows are justified to the container width using each photo's aspect ratio, so a panorama
+        takes more room than a portrait and nothing is cropped. Plus responsive <code>srcset</code>,
+        blur-up skeletons, <code>content-visibility</code> and JSON-LD. Two of the photos below have a
+        <code>caption</code> — hover or focus them to see it.
+      </p>
+      <JustifiedGallery
+        folderPath="demo"
+        album="Rome walking tour"
+        rowHeight={220}
+        alt={{
+          '01-colosseum.jpg': 'The Colosseum lit warm at golden hour',
+          '09-gianicolo-sunset.jpg': 'Sunset over Rome seen from the Gianicolo hill',
+        }}
+        captions={{
+          '05-piazza-navona.jpg': 'Piazza Navona — the Fountain of the Four Rivers at dusk',
+          '09-gianicolo-sunset.jpg':
+            'Golden hour from the Gianicolo, the whole city laid out below',
+        }}
+      />
+
+      <h2>&lt;ImageGallery /&gt;</h2>
+      <p>
+        The same photos in a uniform four-column grid. Every cell is identical, so each image is
+        cropped to fill it — the panorama and the portraits all become the same rectangle. Here the
+        <code>caption</code> renders as an always-visible <code>&lt;figcaption&gt;</code> under the image.
+      </p>
+      <ImageGallery
+        folderPath="demo"
+        columns={4}
+        album="Rome walking tour"
+        captions={{
+          '03-pantheon.jpg': 'The Pantheon portico — 2,000-year-old granite columns',
+          '07-castel-santangelo.jpg': "Castel Sant'Angelo from across the Tiber",
+        }}
+      />
+
+      <h2>&lt;ImageTimeline /&gt;</h2>
+      <p>
+        Grouped by EXIF capture day. <code>orientation="horizontal"</code> (default) puts the days in
+        a rail you scroll sideways:
+      </p>
+      <ImageTimeline folderPath="demo" album="Rome walking tour" />
+
+      <p><code>orientation="vertical"</code> stacks them down the page on a left-hand spine:</p>
+      <ImageTimeline folderPath="demo" album="Rome walking tour" orientation="vertical" />
+
+      <h2>&lt;MapGallery /&gt;</h2>
+      <p>
+        Built from GPS EXIF. Nothing is requested from the tile provider until you accept the
+        consent gate. A crawlable thumbnail list is rendered underneath for search engines and no-JS
+        visitors (view source). Default <code>basemap="osm"</code>:
+      </p>
+      <MapGallery folderPath="demo" album="Rome walking tour" />
+
+      <p>
+        <code>basemap="esri-satellite"</code> — a different (keyless) style; the preset also forces the
+        map controls dark. CARTO / Stadia dark presets work the same way but need a
+        <code>tileApiKey</code>.
+      </p>
+      <MapGallery folderPath="demo" album="Rome walking tour" basemap="esri-satellite" />
+    </main>
+
+    <script>
+      const btn = document.querySelector('[data-theme-toggle]');
+      btn?.addEventListener('click', () => {
+        const root = document.documentElement;
+        const next = root.dataset.asgTheme === 'light' ? 'dark' : 'light';
+        root.dataset.asgTheme = next;
+        root.style.colorScheme = next;
+      });
+    </script>
+  </body>
+</html>

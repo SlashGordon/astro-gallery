@@ -1,0 +1,8 @@
+dist
+coverage
+demo/dist
+demo/.astro
+.astro
+pnpm-lock.yaml
+package-lock.json
+CHANGELOG.md

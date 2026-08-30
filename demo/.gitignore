@@ -1,0 +1,14 @@
+dist/
+.astro/
+node_modules/
+
+# Keep the reverse-geocode cache committed so builds/CI stay offline-friendly.
+.cache/*
+!.cache/astro-gallery/
+.cache/astro-gallery/*
+!.cache/astro-gallery/geocode.json
+
+# generated sample photos
+src/assets/images/demo/*.jpg
+src/assets/images/demo/*.jpeg
+src/assets/images/demo/*.png

@@ -1,0 +1,244 @@
+---
+import { readFile } from 'node:fs/promises';
+import type { ImageMetadata } from 'astro';
+import config from 'virtual:astro-gallery/config';
+import { resolveAlt } from '../internal/alt.js';
+import { readPhotoMeta } from '../internal/exif.js';
+import { fixedImage } from '../internal/images.js';
+import { createGeocoder } from '../internal/geocode.js';
+import { basename, resolveFolder, selectFolderEntries, toAbsolute } from '../internal/paths.js';
+import { groupByDate, type TimelineGroup, type TimelinePhoto } from '../internal/timeline.js';
+import '../styles/gallery.css';
+
+interface Props {
+  /** Folder relative to `src/<imagesDir>/`. */
+  folderPath: string;
+  /** Override the integration's `imagesDir` for this instance. */
+  baseDir?: string;
+  /** Locale for the date labels. Defaults to the integration's `locale`. */
+  locale?: string;
+  /** How many thumbnails to show per day before collapsing into a "+N" tile. */
+  maxPerGroup?: number;
+  /**
+   * `"horizontal"` (default) lays the days out left-to-right in a scrolling rail;
+   * `"vertical"` stacks them down the page on a left-hand spine.
+   */
+  orientation?: 'horizontal' | 'vertical';
+  /** Reverse-geocode a location label per day. Defaults to the integration setting. */
+  geocode?: boolean;
+  /** Text shown under a horizontal timeline inviting sideways scroll. Set `""` to hide. */
+  scrollHint?: string;
+  /** Per-file alt overrides, keyed by file name. */
+  alt?: Record<string, string>;
+  /** Album / gallery name — used for the accessible label and fallback alt. */
+  album?: string;
+}
+
+const {
+  folderPath,
+  baseDir = config.imagesDir,
+  locale = config.locale,
+  maxPerGroup = 4,
+  orientation = 'horizontal',
+  geocode = config.geocode.enabled,
+  scrollHint = 'Scroll for more',
+  alt: altMap = {},
+  album,
+} = Astro.props;
+
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/**/*.{jpg,jpeg,png,webp,avif,gif,tiff,JPG,JPEG,PNG,WEBP,AVIF,GIF,TIFF}',
+  { eager: true },
+);
+
+const target = resolveFolder(baseDir, folderPath);
+const matched = selectFolderEntries(allImages, target);
+const cwd = process.cwd();
+
+const photos: TimelinePhoto[] = await Promise.all(
+  matched.map(async ([key, mod], i): Promise<TimelinePhoto> => {
+    const meta = mod.default;
+    const file = basename(key);
+    const [thumb, full] = await Promise.all([
+      fixedImage(meta, { width: 600, format: config.imageFormat }),
+      fixedImage(meta, { width: config.fullWidth, format: config.imageFormat }),
+    ]);
+
+    let exif: Awaited<ReturnType<typeof readPhotoMeta>> | null = null;
+    try {
+      exif = await readPhotoMeta(await readFile(toAbsolute(key, cwd)));
+    } catch {
+      /* unreadable — keep null */
+    }
+
+    return {
+      thumbSrc: thumb.src,
+      fullSrc: full.src,
+      alt: resolveAlt({
+        file,
+        explicit: altMap[file],
+        description: exif?.description ?? null,
+        album,
+        index: i + 1,
+      }),
+      width: thumb.width,
+      height: thumb.height,
+      date: exif?.date ?? null,
+      latitude: exif?.latitude ?? null,
+      longitude: exif?.longitude ?? null,
+      camera: exif?.camera ?? null,
+    };
+  }),
+);
+
+const pending = groupByDate(photos, locale, config.undatedLabel);
+
+const geocoder =
+  geocode && pending.some((g) => g.photos.some((p) => p.latitude != null))
+    ? createGeocoder(config.geocode)
+    : null;
+
+const groups: TimelineGroup[] = [];
+for (const group of pending) {
+  let location = '';
+  const withGps = group.photos.find((p) => p.latitude != null && p.longitude != null);
+  if (geocoder && withGps?.latitude != null && withGps.longitude != null) {
+    location = (await geocoder.reverseGeocode(withGps.latitude, withGps.longitude)).label;
+  }
+  groups.push({ ...group, location });
+}
+geocoder?.flush();
+
+const label = album ? `${album} timeline` : 'Photo timeline';
+---
+
+{
+  groups.length > 0 && (
+    <section
+      class:list={['asg-timeline', `asg-timeline--${orientation}`]}
+      data-asg-orientation={orientation}
+      aria-label={label}
+      data-asg-lightbox="true"
+    >
+      <div class="asg-timeline__scroller">
+        <div class="asg-timeline__rail">
+          <div class="asg-timeline__line" aria-hidden="true" />
+          <ol class="asg-timeline__groups" role="list">
+            {groups.map((group) => (
+              <li class="asg-timeline__group">
+                <span class="asg-timeline__node" aria-hidden="true" />
+                {group.isoDate ? (
+                  <time class="asg-timeline__date" datetime={group.isoDate}>
+                    {group.dateLabel}
+                  </time>
+                ) : (
+                  <span class="asg-timeline__date">{group.dateLabel}</span>
+                )}
+
+                <div class="asg-timeline__grid">
+                  {group.photos.slice(0, maxPerGroup).map((photo, i) => (
+                    <a
+                      class="asg-timeline__item asg-lb-item"
+                      href={photo.fullSrc}
+                      data-asg-full={photo.fullSrc}
+                      data-asg-alt={photo.alt}
+                      data-asg-caption={group.location}
+                      aria-label={photo.alt}
+                    >
+                      <img
+                        src={photo.thumbSrc}
+                        alt={photo.alt}
+                        width={photo.width}
+                        height={photo.height}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      {i === maxPerGroup - 1 && group.photos.length > maxPerGroup && (
+                        <span class="asg-timeline__more" aria-hidden="true">
+                          +{group.photos.length - maxPerGroup}
+                        </span>
+                      )}
+                    </a>
+                  ))}
+                </div>
+
+                {(group.location || group.camera) && (
+                  <div class="asg-timeline__meta">
+                    {group.location && (
+                      <span>
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          aria-hidden="true"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"
+                          />
+                          <circle cx="12" cy="11" r="3" />
+                        </svg>{' '}
+                        {group.location}
+                      </span>
+                    )}
+                    {group.camera && (
+                      <span>
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          aria-hidden="true"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                          />
+                          <circle cx="12" cy="13" r="3" />
+                        </svg>{' '}
+                        {group.camera}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+
+      {orientation === 'horizontal' && scrollHint && groups.length > 1 && (
+        <p class="asg-timeline__hint" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+          <span>{scrollHint}</span>
+        </p>
+      )}
+    </section>
+  )
+}
+
+<script>
+  import { initLightboxes } from '../internal/lightbox.js';
+
+  function initHints() {
+    document.querySelectorAll<HTMLElement>('.asg-timeline').forEach((tl) => {
+      const scroller = tl.querySelector<HTMLElement>('.asg-timeline__scroller');
+      const hint = tl.querySelector<HTMLElement>('.asg-timeline__hint');
+      if (!scroller || !hint || scroller.dataset.asgHint === 'true') return;
+      scroller.dataset.asgHint = 'true';
+      const hide = () => (hint.style.opacity = '0');
+      scroller.addEventListener('scroll', hide, { once: true });
+      setTimeout(hide, 4000);
+    });
+  }
+
+  initLightboxes();
+  initHints();
+  document.addEventListener('astro:page-load', initHints);
+  document.addEventListener('astro:after-swap', initHints);
+</script>

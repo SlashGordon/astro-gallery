@@ -1,0 +1,236 @@
+---
+import { readFile } from 'node:fs/promises';
+import type { ImageMetadata } from 'astro';
+import config from 'virtual:astro-gallery/config';
+import { resolveAlt } from '../internal/alt.js';
+import { readPhotoMeta } from '../internal/exif.js';
+import { fixedImage, responsiveImage } from '../internal/images.js';
+import { basename, resolveFolder, selectFolderEntries, toAbsolute } from '../internal/paths.js';
+import { imageGalleryJsonLd, type LdImage } from '../internal/structured-data.js';
+import '../styles/gallery.css';
+
+type ImageInput = {
+  /** An `import`ed image, a `/public` path or a remote URL. */
+  src: string | ImageMetadata;
+  alt?: string;
+  caption?: string;
+};
+
+interface Props {
+  /** Folder relative to `src/<imagesDir>/` — every image inside is used, sorted by name. */
+  folderPath?: string;
+  /** Explicit images. Use this or `folderPath`, not both. */
+  images?: ImageInput[];
+  /** Override the integration's `imagesDir` for this instance. */
+  baseDir?: string;
+  /** Target row height in px (rows are justified to fill the width). Default `260`. */
+  rowHeight?: number;
+  /** CSS gap between items, e.g. `"0.5rem"`. */
+  gap?: string;
+  /** First N images load eagerly with high priority (above-the-fold). Default `2`. */
+  eager?: number;
+  /** Open images in the built-in lightbox. Default `true`. */
+  lightbox?: boolean;
+  /** Per-file alt overrides (folder mode), keyed by file name. */
+  alt?: Record<string, string>;
+  /** Per-file caption overrides (folder mode), keyed by file name. */
+  captions?: Record<string, string>;
+  /** Album / gallery name — used for the accessible label, fallback alt and JSON-LD. */
+  album?: string;
+  /** `<img sizes>` attribute. Default covers a 1–3 column responsive layout. */
+  sizes?: string;
+  /** Emit `ImageGallery` JSON-LD. Defaults to the integration setting. */
+  structuredData?: boolean;
+}
+
+const {
+  folderPath,
+  images,
+  baseDir = config.imagesDir,
+  rowHeight = 260,
+  gap,
+  eager = 2,
+  lightbox = true,
+  alt: altMap = {},
+  captions = {},
+  album,
+  sizes = '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw',
+  structuredData = config.structuredData,
+} = Astro.props;
+
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/**/*.{jpg,jpeg,png,webp,avif,gif,tiff,JPG,JPEG,PNG,WEBP,AVIF,GIF,TIFF}',
+  { eager: true },
+);
+
+interface Item {
+  src: string;
+  srcset: string;
+  fullSrc: string;
+  width: number;
+  height: number;
+  aspectRatio: number;
+  alt: string;
+  caption: string;
+}
+
+const widths = config.responsiveWidths;
+const format = config.imageFormat;
+let items: Item[] = [];
+
+if (folderPath) {
+  const target = resolveFolder(baseDir, folderPath);
+  const matched = selectFolderEntries(allImages, target);
+  const cwd = process.cwd();
+
+  items = await Promise.all(
+    matched.map(async ([key, mod], i): Promise<Item> => {
+      const meta = mod.default;
+      const file = basename(key);
+
+      let description: string | null = null;
+      try {
+        description = (await readPhotoMeta(await readFile(toAbsolute(key, cwd)))).description;
+      } catch {
+        /* unreadable — no embedded description */
+      }
+
+      const [responsive, full] = await Promise.all([
+        responsiveImage(meta, { widths, format }),
+        fixedImage(meta, { width: config.fullWidth, format }),
+      ]);
+
+      const resolvedAlt = resolveAlt({
+        file,
+        explicit: altMap[file],
+        description,
+        album,
+        index: i + 1,
+      });
+
+      return {
+        src: responsive.src,
+        srcset: responsive.srcset,
+        fullSrc: full.src,
+        width: responsive.width,
+        height: responsive.height,
+        aspectRatio: responsive.aspectRatio,
+        alt: resolvedAlt,
+        caption: captions[file] ?? (description && description !== resolvedAlt ? description : ''),
+      };
+    }),
+  );
+} else if (images?.length) {
+  items = await Promise.all(
+    images.map(async ({ src, alt = '', caption = '' }, i): Promise<Item> => {
+      if (typeof src === 'string') {
+        const guessedAlt = resolveAlt({ file: src, explicit: alt, album, index: i + 1 });
+        return {
+          src,
+          srcset: '',
+          fullSrc: src,
+          width: 0,
+          height: 0,
+          aspectRatio: 3 / 2,
+          alt: guessedAlt,
+          caption,
+        };
+      }
+      const [responsive, full] = await Promise.all([
+        responsiveImage(src, { widths, format }),
+        fixedImage(src, { width: config.fullWidth, format }),
+      ]);
+      return {
+        src: responsive.src,
+        srcset: responsive.srcset,
+        fullSrc: full.src,
+        width: responsive.width,
+        height: responsive.height,
+        aspectRatio: responsive.aspectRatio,
+        alt: alt || resolveAlt({ file: `photo-${i + 1}`, album, index: i + 1 }),
+        caption,
+      };
+    }),
+  );
+}
+
+const label = album ? `${album} gallery` : 'Image gallery';
+
+const jsonLd =
+  structuredData && items.length > 0
+    ? imageGalleryJsonLd(
+        items.map((it): LdImage => ({
+          contentUrl: it.fullSrc,
+          thumbnailUrl: it.src,
+          name: it.alt,
+          caption: it.caption || undefined,
+          width: it.width || undefined,
+          height: it.height || undefined,
+        })),
+        { name: album ?? undefined, siteUrl: Astro.site },
+      )
+    : '';
+---
+
+{
+  items.length > 0 && (
+    <>
+      <ul
+        class="asg-jgallery"
+        role="list"
+        aria-label={label}
+        data-asg-lightbox={lightbox ? 'true' : 'false'}
+        style={`--asg-row-h:${rowHeight}px;${gap ? `--asg-gap:${gap};` : ''}`}
+      >
+        {items.map((it, i) => (
+          <li class="asg-jgallery__cell" style={`--asg-ar:${it.aspectRatio.toFixed(4)}`}>
+            <figure class="asg-jgallery__figure">
+              <a
+                class="asg-jgallery__item asg-lb-item"
+                href={it.fullSrc}
+                data-asg-full={it.fullSrc}
+                data-asg-alt={it.alt}
+                data-asg-caption={it.caption}
+                aria-label={it.caption || it.alt}
+              >
+                <img
+                  src={it.src}
+                  srcset={it.srcset || undefined}
+                  sizes={it.srcset ? sizes : undefined}
+                  width={it.width || undefined}
+                  height={it.height || undefined}
+                  alt={it.alt}
+                  loading={i < eager ? 'eager' : 'lazy'}
+                  fetchpriority={i < eager ? 'high' : 'auto'}
+                  decoding="async"
+                />
+              </a>
+              {it.caption && <figcaption class="asg-jgallery__caption">{it.caption}</figcaption>}
+            </figure>
+          </li>
+        ))}
+      </ul>
+      {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
+    </>
+  )
+}
+
+<script>
+  import { initLightboxes } from '../internal/lightbox.js';
+
+  function markLoaded() {
+    document
+      .querySelectorAll<HTMLImageElement>('.asg-jgallery__item img:not([data-asg-seen])')
+      .forEach((img) => {
+        img.dataset.asgSeen = 'true';
+        const done = () => img.closest('.asg-jgallery__figure')?.classList.add('is-loaded');
+        if (img.complete) done();
+        else img.addEventListener('load', done, { once: true });
+      });
+  }
+
+  initLightboxes();
+  markLoaded();
+  document.addEventListener('astro:page-load', markLoaded);
+  document.addEventListener('astro:after-swap', markLoaded);
+</script>
