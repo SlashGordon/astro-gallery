@@ -1,6 +1,6 @@
 {
   "name": "astro-gallery",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Folder-driven image galleries for Astro: a responsive grid with lightbox, an EXIF-date timeline, and a GDPR-friendly photo map — all powered by astro:assets.",
   "keywords": [
     "astro",

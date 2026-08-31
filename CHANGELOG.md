@@ -6,6 +6,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-08-31
+
+### Fixed
+
+- Gallery thumbnails showed a strip of the figure border / skeleton background
+  with a rounded corner along the top (and sometimes the bottom) when the
+  component was used inside a content wrapper that styles bare `<img>` — most
+  commonly Tailwind Typography's `.prose`, which adds `margin: 2em 0`. The image
+  CSS now forces `margin: 0`, `max-width: none` and `border-radius: 0` on gallery
+  images so host styles can no longer push the image off its wrapper.
+
 ## [1.0.2] - 2026-08-31
 
 ### Fixed
@@ -88,7 +99,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Build-time reverse geocoding (Nominatim) with a committable JSON cache.
 - CSS-custom-property theming, automatic light/dark support.
 
-[Unreleased]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/SlashGordon/astro-gallery/compare/v0.1.0...v1.0.0
