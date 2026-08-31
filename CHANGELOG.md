@@ -6,6 +6,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-08-31
+
+### Fixed
+
+- `MapGallery` crashed in `astro dev` with `The requested module '.../leaflet-src.js'
+  does not provide an export named 'default'`. The consent button did nothing
+  because the whole client script failed to load. The integration now adds
+  `leaflet` to `vite.optimizeDeps.include` so it is pre-bundled with proper
+  CJS interop.
+
 ## [1.0.1] - 2026-08-31
 
 ### Added
@@ -78,7 +88,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Build-time reverse geocoding (Nominatim) with a committable JSON cache.
 - CSS-custom-property theming, automatic light/dark support.
 
-[Unreleased]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/SlashGordon/astro-gallery/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/SlashGordon/astro-gallery/releases/tag/v0.1.0

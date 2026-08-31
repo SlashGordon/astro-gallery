@@ -49,7 +49,15 @@ export default function gallery(userOptions: GalleryUserOptions = {}): AstroInte
             // Keep the package in Vite's transform pipeline instead of treating
             // it as an opaque external dependency.
             ssr: { noExternal: ['astro-gallery'] },
-            optimizeDeps: { exclude: ['astro-gallery'] },
+            optimizeDeps: {
+              exclude: ['astro-gallery'],
+              // Leaflet ships UMD only and has no ESM `default` export. Because
+              // `astro-gallery` is excluded above, Vite never crawls into
+              // MapGallery's client script to discover `leaflet`, so it must be
+              // pre-bundled explicitly or `import L from 'leaflet'` throws
+              // "does not provide an export named 'default'" in dev.
+              include: ['leaflet'],
+            },
           },
         });
 
