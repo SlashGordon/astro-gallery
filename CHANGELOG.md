@@ -6,6 +6,24 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-08-31
+
+### Fixed
+
+- `MapGallery` markers rendered at full thumbnail size — covering the map and
+  overlapping each other — whenever the host page styles bare `<img>` (Tailwind
+  Typography's `.prose img`, resets with `width: auto` / `max-width: 100%`). The
+  marker size came only from the `<img>` width/height attributes, which any such
+  rule overrides. `.asg-map__marker` now pins its 44px box (plus `max-width`,
+  `margin` and `border-radius`) with `!important`.
+
+### Added
+
+- `MapGallery` now clusters markers by proximity: photos closer than ~52px at the
+  current zoom merge into a single pin with a count badge. Clicking a cluster
+  zooms to its bounds, or — at max zoom / when the photos share a spot — opens
+  the stack in the lightbox. Re-clustering runs on every zoom.
+
 ## [1.0.3] - 2026-08-31
 
 ### Fixed
@@ -99,7 +117,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Build-time reverse geocoding (Nominatim) with a committable JSON cache.
 - CSS-custom-property theming, automatic light/dark support.
 
-[Unreleased]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.0...v1.0.1
