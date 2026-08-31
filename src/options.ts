@@ -159,7 +159,7 @@ export const DEFAULT_CONFIG: GalleryConfig = {
   geocode: {
     enabled: true,
     endpoint: 'https://nominatim.openstreetmap.org/reverse',
-    userAgent: 'astro-gallery (https://github.com/slashgordon/astrogallery)',
+    userAgent: 'astro-gallery (https://github.com/SlashGordon/astro-gallery)',
     language: 'en',
     cachePath: '.cache/astro-gallery/geocode.json',
     minRequestIntervalMs: 1200,

@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write # Required for OIDC and npm provenance
+  id-token: write # OIDC — npm trusted publishing + provenance
 
 jobs:
   publish:
@@ -20,11 +20,18 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
           cache: npm
+
+      # Trusted publishing (tokenless OIDC auth) needs npm >= 11.5.1;
+      # Node 22 still bundles npm 10.
+      - run: npm install -g npm@latest
+      - run: npm --version
+
       - name: Tag matches package.json version
         run: |
           pkg="v$(node -p "require('./package.json').version")"
           echo "git tag=$GITHUB_REF_NAME  package.json=$pkg"
           test "$pkg" = "$GITHUB_REF_NAME"
+
       - run: npm ci
       - run: npm run typecheck && npm test && npm run build
       - run: npm publish --provenance --access public

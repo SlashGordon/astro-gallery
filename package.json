@@ -1,6 +1,6 @@
 {
   "name": "astro-gallery",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Folder-driven image galleries for Astro: a responsive grid with lightbox, an EXIF-date timeline, and a GDPR-friendly photo map — all powered by astro:assets.",
   "keywords": [
     "astro",
@@ -18,13 +18,13 @@
     "timeline",
     "gdpr"
   ],
-  "homepage": "https://github.com/slashgordon/astrogallery#readme",
+  "homepage": "https://github.com/SlashGordon/astro-gallery#readme",
   "bugs": {
-    "url": "https://github.com/slashgordon/astrogallery/issues"
+    "url": "https://github.com/SlashGordon/astro-gallery/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/slashgordon/astrogallery.git"
+    "url": "git+https://github.com/SlashGordon/astro-gallery.git"
   },
   "license": "MIT",
   "author": "SlashGordon",

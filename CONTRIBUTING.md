@@ -8,8 +8,8 @@ Node 20+ is required for the tooling (Vitest 4). The `demo/` playground uses
 Astro 7 and needs Node 22.12+.
 
 ```bash
-git clone https://github.com/slashgordon/astrogallery
-cd astrogallery
+git clone https://github.com/SlashGordon/astro-gallery
+cd astro-gallery
 npm install
 npm --prefix demo install   # once, for the playground
 ```
