@@ -6,6 +6,20 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-08-31
+
+### Added
+
+- **Multi-language text.** Every user-facing string option
+  (`undatedLabel`, `map.consentTitle` / `consentText` / `consentButtonLabel`, and
+  the `scrollHint` / `undatedLabel` component props) now also accepts a
+  `LocalizedText` dictionary keyed by locale/language code, resolved against the
+  component's active `locale` (exact code → language → same-language entry →
+  `default` / `*` → first entry). New `pickText` helper and `LocalizedText` /
+  `MaybeLocalized` types are exported from the package root.
+- `<ImageTimeline />` `undatedLabel` prop — per-instance override of the
+  integration's dateless-group label.
+
 ## [1.0.0] - 2026-08-31
 
 ### Added
@@ -64,6 +78,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Build-time reverse geocoding (Nominatim) with a committable JSON cache.
 - CSS-custom-property theming, automatic light/dark support.
 
-[Unreleased]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/SlashGordon/astro-gallery/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/SlashGordon/astro-gallery/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/SlashGordon/astro-gallery/releases/tag/v0.1.0
