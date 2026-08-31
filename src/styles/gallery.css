@@ -44,6 +44,23 @@
   --asg-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
 }
 
+/*
+ * Host content styles frequently target bare `<img>` — Tailwind Typography's
+ * `.prose img` adds `margin: 2em 0`, CSS resets add `max-width: 100%`, blogs add
+ * `border-radius`. Inside our `overflow: hidden` figures that margin shifts the
+ * image off its container and exposes the figure border / skeleton background as
+ * a strip. Each gallery image fills a wrapper that already owns sizing and the
+ * corner radius, so neutralise those properties regardless of load order.
+ */
+.asg-gallery__item img,
+.asg-jgallery__item img,
+.asg-timeline__item img,
+.asg-map__fallback img {
+  margin: 0 !important;
+  max-width: none !important;
+  border-radius: 0 !important;
+}
+
 /* ------------------------------------------------------------ Grid gallery -- */
 
 .asg-gallery {
@@ -362,6 +379,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
   transition: transform var(--asg-transition) ease;
 }
 
