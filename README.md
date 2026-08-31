@@ -170,17 +170,18 @@ Without JavaScript the thumbnails are still plain links to the full-size image.
 <ImageTimeline folderPath="trips/rome" orientation="vertical" />
 ```
 
-| Prop          | Type                         | Default              | Notes                                                         |
-| ------------- | ---------------------------- | -------------------- | ------------------------------------------------------------- |
-| `folderPath`  | `string`                     | – (required)         | Folder relative to `src/<imagesDir>/`.                        |
-| `baseDir`     | `string`                     | `imagesDir`          | Override the base folder.                                     |
-| `locale`      | `string`                     | integration `locale` | Date-label locale.                                            |
-| `maxPerGroup` | `number`                     | `4`                  | Thumbnails per day before a `+N` tile.                        |
-| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'`       | Horizontal scrolling rail, or a vertical spine down the page. |
-| `geocode`     | `boolean`                    | integration setting  | Reverse-geocode one location label per day.                   |
-| `scrollHint`  | `string`                     | `'Scroll for more'`  | Hint under a **horizontal** timeline; `""` hides it.          |
-| `alt`         | `Record<string,string>`      | `{}`                 | Per-file `alt` overrides, keyed by file name.                 |
-| `album`       | `string`                     | –                    | Accessible label and fallback `alt`.                          |
+| Prop           | Type                         | Default              | Notes                                                         |
+| -------------- | ---------------------------- | -------------------- | ------------------------------------------------------------- |
+| `folderPath`   | `string`                     | – (required)         | Folder relative to `src/<imagesDir>/`.                        |
+| `baseDir`      | `string`                     | `imagesDir`          | Override the base folder.                                     |
+| `locale`       | `string`                     | integration `locale` | Date-label locale.                                            |
+| `maxPerGroup`  | `number`                     | `4`                  | Thumbnails per day before a `+N` tile.                        |
+| `orientation`  | `'horizontal' \| 'vertical'` | `'horizontal'`       | Horizontal scrolling rail, or a vertical spine down the page. |
+| `geocode`      | `boolean`                    | integration setting  | Reverse-geocode one location label per day.                   |
+| `scrollHint`   | `string \| LocalizedText`    | `'Scroll for more'`  | Hint under a **horizontal** timeline; `""` hides it.          |
+| `undatedLabel` | `string \| LocalizedText`    | integration setting  | Label for the trailing group of dateless photos.              |
+| `alt`          | `Record<string,string>`      | `{}`                 | Per-file `alt` overrides, keyed by file name.                 |
+| `album`        | `string`                     | –                    | Accessible label and fallback `alt`.                          |
 
 Photos with no EXIF date collapse into a single trailing group (label
 configurable via the integration's `undatedLabel`).
@@ -208,7 +209,7 @@ the component renders nothing.
 | `tileApiKeyParam`                                     | `string`                  | `api_key`                   | Query-param name for `tileApiKey`.                       |
 | `consent`                                             | `boolean`                 | `true`                      | Show the consent gate before loading tiles.              |
 | `consentKey`                                          | `string`                  | `astro-gallery:map-consent` | `localStorage` key for the choice.                       |
-| `consentTitle` / `consentText` / `consentButtonLabel` | `string`                  | English defaults            | Consent gate copy (`consentText` allows HTML).           |
+| `consentTitle` / `consentText` / `consentButtonLabel` | `string \| LocalizedText` | English defaults            | Consent gate copy (`consentText` allows HTML).           |
 | `alt`                                                 | `Record<string,string>`   | `{}`                        | Per-file `alt` overrides, keyed by file name.            |
 | `album`                                               | `string`                  | –                           | Accessible label, fallback `alt`, JSON-LD name.          |
 | `structuredData`                                      | `boolean`                 | integration setting         | Emit `ImageGallery` JSON-LD.                             |
@@ -376,6 +377,41 @@ time using [Nominatim](https://nominatim.org/). Results are written to
 the network. Nominatim's [usage policy](https://operations.osmfoundation.org/policies/nominatim/)
 asks for a real `User-Agent` and ≤ 1 request/second; the defaults respect this,
 but set your own `userAgent`. To disable geocoding entirely: `geocode: { enabled: false }`.
+
+### Multi-language text
+
+Every user-facing string option accepts **either a plain string or a
+`LocalizedText` dictionary** keyed by locale/language code:
+
+```ts
+gallery({
+  locale: 'de-DE',
+  undatedLabel: { 'de-DE': 'Undatiert', en: 'Undated' },
+  map: {
+    consentTitle: { de: 'Kartenansicht', en: 'Map view' },
+    consentText: {
+      de: 'Beim Laden der Karte werden Kartenkacheln von einem externen Anbieter geladen…',
+      en: 'Loading the map requests map tiles from an external provider…',
+    },
+    consentButtonLabel: { de: 'Karte laden', en: 'Load map' },
+  },
+});
+```
+
+The entry is chosen against the component's **active `locale`** — the `locale`
+prop if given, otherwise the integration's `locale`. On an
+[i18n-routed](https://docs.astro.build/en/guides/internationalization/) site, pass
+the current locale through:
+
+```astro
+<MapGallery folderPath="trips/rome" locale={Astro.currentLocale} />
+<ImageTimeline folderPath="trips/rome" locale={Astro.currentLocale} />
+```
+
+Matching order: exact code (`de-DE`) → language (`de`) → any same-language entry →
+a `default` / `*` key → the first entry. Comparison ignores case and `-`/`_`. The
+same dictionaries work on the component props (`scrollHint`, `undatedLabel`,
+`consentTitle` / `consentText` / `consentButtonLabel`).
 
 ---
 

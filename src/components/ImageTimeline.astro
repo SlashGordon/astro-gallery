@@ -8,6 +8,7 @@ import { fixedImage } from '../internal/images.js';
 import { createGeocoder } from '../internal/geocode.js';
 import { basename, resolveFolder, selectFolderEntries, toAbsolute } from '../internal/paths.js';
 import { groupByDate, type TimelineGroup, type TimelinePhoto } from '../internal/timeline.js';
+import { pickText, type MaybeLocalized } from '../internal/i18n.js';
 import '../styles/gallery.css';
 
 interface Props {
@@ -26,8 +27,13 @@ interface Props {
   orientation?: 'horizontal' | 'vertical';
   /** Reverse-geocode a location label per day. Defaults to the integration setting. */
   geocode?: boolean;
-  /** Text shown under a horizontal timeline inviting sideways scroll. Set `""` to hide. */
-  scrollHint?: string;
+  /**
+   * Text shown under a horizontal timeline inviting sideways scroll. Set `""` to
+   * hide. A string, or a per-locale dictionary resolved against `locale`.
+   */
+  scrollHint?: MaybeLocalized;
+  /** Label for photos without an EXIF date. Defaults to the integration's `undatedLabel`. */
+  undatedLabel?: MaybeLocalized;
   /** Per-file alt overrides, keyed by file name. */
   alt?: Record<string, string>;
   /** Album / gallery name — used for the accessible label and fallback alt. */
@@ -41,10 +47,14 @@ const {
   maxPerGroup = 4,
   orientation = 'horizontal',
   geocode = config.geocode.enabled,
-  scrollHint = 'Scroll for more',
+  scrollHint: scrollHintOpt = 'Scroll for more',
+  undatedLabel: undatedLabelOpt,
   alt: altMap = {},
   album,
 } = Astro.props;
+
+const scrollHint = pickText(scrollHintOpt, locale);
+const undatedLabel = pickText(undatedLabelOpt ?? config.undatedLabel, locale);
 
 const allImages = import.meta.glob<{ default: ImageMetadata }>(
   '/src/**/*.{jpg,jpeg,png,webp,avif,gif,tiff,JPG,JPEG,PNG,WEBP,AVIF,GIF,TIFF}',
@@ -91,7 +101,7 @@ const photos: TimelinePhoto[] = await Promise.all(
   }),
 );
 
-const pending = groupByDate(photos, locale, config.undatedLabel);
+const pending = groupByDate(photos, locale, undatedLabel);
 
 const geocoder =
   geocode && pending.some((g) => g.photos.some((p) => p.latitude != null))

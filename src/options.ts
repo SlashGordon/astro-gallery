@@ -5,8 +5,10 @@
  */
 
 import { BASEMAPS, type BasemapId } from './internal/basemaps.js';
+import type { MaybeLocalized } from './internal/i18n.js';
 
 export type { BasemapId } from './internal/basemaps.js';
+export type { LocalizedText, MaybeLocalized } from './internal/i18n.js';
 
 export interface MapOptions {
   /**
@@ -44,12 +46,12 @@ export interface MapOptions {
   consent?: boolean;
   /** `localStorage` key used to remember the visitor's consent choice. */
   consentKey?: string;
-  /** Heading rendered on the consent gate. */
-  consentTitle?: string;
-  /** Body copy for the consent gate. HTML is allowed. */
-  consentText?: string;
-  /** Label of the "load the map" button. */
-  consentButtonLabel?: string;
+  /** Heading rendered on the consent gate. String, or a per-locale dictionary. */
+  consentTitle?: MaybeLocalized;
+  /** Body copy for the consent gate. HTML is allowed. String, or a per-locale dictionary. */
+  consentText?: MaybeLocalized;
+  /** Label of the "load the map" button. String, or a per-locale dictionary. */
+  consentButtonLabel?: MaybeLocalized;
 }
 
 export interface GeocodeOptions {
@@ -82,8 +84,11 @@ export interface GalleryUserOptions {
   fullWidth?: number;
   /** Output format for generated images. Default `"webp"`. */
   imageFormat?: 'webp' | 'avif' | 'jpeg' | 'png';
-  /** Label used for photos that carry no EXIF date. Default `"Undated"`. */
-  undatedLabel?: string;
+  /**
+   * Label used for photos that carry no EXIF date. Default `"Undated"`.
+   * String, or a per-locale dictionary resolved against the component's `locale`.
+   */
+  undatedLabel?: MaybeLocalized;
   /**
    * Candidate widths (px) used to build `srcset`. Widths larger than a given
    * source image are dropped. Default `[400, 640, 960, 1280, 1920]`.
@@ -108,9 +113,9 @@ export interface ResolvedMapConfig {
   tileApiKeyParam: string;
   consent: boolean;
   consentKey: string;
-  consentTitle: string;
-  consentText: string;
-  consentButtonLabel: string;
+  consentTitle: MaybeLocalized;
+  consentText: MaybeLocalized;
+  consentButtonLabel: MaybeLocalized;
 }
 
 export interface GalleryConfig {
@@ -119,7 +124,7 @@ export interface GalleryConfig {
   thumbWidth: number;
   fullWidth: number;
   imageFormat: 'webp' | 'avif' | 'jpeg' | 'png';
-  undatedLabel: string;
+  undatedLabel: MaybeLocalized;
   responsiveWidths: number[];
   structuredData: boolean;
   map: ResolvedMapConfig;

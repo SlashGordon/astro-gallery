@@ -10,6 +10,7 @@ import { basename, resolveFolder, selectFolderEntries, toAbsolute } from '../int
 import { imageGalleryJsonLd, type LdImage } from '../internal/structured-data.js';
 import { withApiKey } from '../internal/tiles.js';
 import { getBasemap, type BasemapId } from '../internal/basemaps.js';
+import { pickText, type MaybeLocalized } from '../internal/i18n.js';
 import 'leaflet/dist/leaflet.css';
 import '../styles/gallery.css';
 
@@ -43,9 +44,10 @@ interface Props {
   tileApiKeyParam?: string;
   consent?: boolean;
   consentKey?: string;
-  consentTitle?: string;
-  consentText?: string;
-  consentButtonLabel?: string;
+  /** Consent-gate copy. A string, or a per-locale dictionary resolved against `locale`. */
+  consentTitle?: MaybeLocalized;
+  consentText?: MaybeLocalized;
+  consentButtonLabel?: MaybeLocalized;
 }
 
 const props = Astro.props;
@@ -78,9 +80,9 @@ if (preset?.needsKey && !apiKey.trim()) {
 }
 const consent = props.consent ?? map.consent;
 const consentKey = props.consentKey ?? map.consentKey;
-const consentTitle = props.consentTitle ?? map.consentTitle;
-const consentText = props.consentText ?? map.consentText;
-const consentButtonLabel = props.consentButtonLabel ?? map.consentButtonLabel;
+const consentTitle = pickText(props.consentTitle ?? map.consentTitle, locale);
+const consentText = pickText(props.consentText ?? map.consentText, locale);
+const consentButtonLabel = pickText(props.consentButtonLabel ?? map.consentButtonLabel, locale);
 
 interface Marker {
   thumbSrc: string;
