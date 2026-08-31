@@ -23,19 +23,18 @@ npm run demo:build   # production build (good end-to-end check)
 ## What `npm run dev` does
 
 1. `build:lib` — rebuilds the integration (`../dist`) so your latest source is used.
-2. `generate-samples` — writes nine gradient JPEGs with synthetic EXIF
-   (capture date + GPS around Rome) into `src/assets/images/demo/`, so
-   `<ImageTimeline />` and `<MapGallery />` have data. Their shapes vary on
-   purpose (landscape / portrait / square / panorama) so the difference between
-   `<JustifiedGallery />` and `<ImageGallery />` is visible. Skipped if images
-   are already there.
+2. `generate-samples` — a fallback that writes gradient JPEGs with synthetic EXIF
+   into `src/assets/images/holidays/` only when that folder is empty. The demo
+   ships with real holiday photos there, so this is normally a no-op.
 3. `astro dev`.
 
 ## Use your own photos
 
-Drop `.jpg` files into [`src/assets/images/demo/`](./src/assets/images/demo/) —
-sample generation then skips. They need EXIF `DateTimeOriginal` for the timeline
-and GPS tags for the map (most photos straight from a phone have both).
+Replace the `.jpg` files in
+[`src/assets/images/holidays/`](./src/assets/images/holidays/). They need EXIF
+`DateTimeOriginal` for the timeline and GPS tags for the map (most photos
+straight from a phone have both); files without EXIF still show in the two grid
+layouts.
 
 ## Notes
 

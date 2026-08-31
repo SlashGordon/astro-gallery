@@ -3,8 +3,9 @@
  * capture date + GPS — so the demo has something for `<ImageTimeline />` and
  * `<MapGallery />` to work with.
  *
- * - Skips generation if the folder already contains images, so you can drop your
- *   own photos into `demo/src/assets/images/demo/` instead.
+ * - Skips generation if the folder already contains images. The demo ships with
+ *   real holiday photos in `demo/src/assets/images/holidays/`, so generation is a
+ *   no-op unless that folder is emptied.
  * - Runs automatically before `npm run dev` / `npm run build` in the demo.
  *
  * EXIF is written by sharp's native `withExif()`, so the output is always a valid
@@ -15,7 +16,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT_DIR = join(HERE, '..', 'src', 'assets', 'images', 'demo');
+const OUT_DIR = join(HERE, '..', 'src', 'assets', 'images', 'holidays');
 
 mkdirSync(OUT_DIR, { recursive: true });
 

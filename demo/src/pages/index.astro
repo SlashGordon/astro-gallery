@@ -95,16 +95,16 @@ import MapGallery from 'astro-gallery/components/MapGallery.astro';
         <h1>astro-gallery</h1>
         <p>
           Four folder-driven components, all reading from
-          <code>src/assets/images/demo/</code>. The photos below are generated gradients with
-          synthetic EXIF (capture date + GPS around Rome) so the timeline and map have data to work
-          with. View source to see the semantic markup and JSON-LD.
+          <code>src/assets/images/holidays/</code>. These are real holiday snapshots — most carry
+          EXIF (capture date + GPS), so the timeline and map have data to work with; the few phone
+          messenger exports with their metadata stripped still show up in the two grid layouts. View
+          source to see the semantic markup and JSON-LD.
         </p>
       </header>
 
       <p class="callout">
-        The next two sections render the <strong>same nine photos</strong> — deliberately a mix of landscape,
-        portrait, square and panorama (each label shows its pixel size). Only the
-        <em>layout</em> differs.
+        The next two sections render the <strong>same thirteen photos</strong> — a mix of landscape, portrait
+        and panorama shot on different trips. Only the <em>layout</em> differs.
       </p>
 
       <h2>&lt;JustifiedGallery /&gt;</h2>
@@ -115,17 +115,16 @@ import MapGallery from 'astro-gallery/components/MapGallery.astro';
         <code>caption</code> — hover or focus them to see it.
       </p>
       <JustifiedGallery
-        folderPath="demo"
-        album="Rome walking tour"
+        folderPath="holidays"
+        album="Holiday snapshots"
         rowHeight={220}
         alt={{
-          '01-colosseum.jpg': 'The Colosseum lit warm at golden hour',
-          '09-gianicolo-sunset.jpg': 'Sunset over Rome seen from the Gianicolo hill',
+          '1.jpg': 'Evening light on the Cornwall coast',
+          '7.jpg': 'A hill town in the Tuscan countryside',
         }}
         captions={{
-          '05-piazza-navona.jpg': 'Piazza Navona — the Fountain of the Four Rivers at dusk',
-          '09-gianicolo-sunset.jpg':
-            'Golden hour from the Gianicolo, the whole city laid out below',
+          '5.jpg': 'A grey afternoon in London',
+          '7.jpg': 'Tuscany, late August — the road up to the village',
         }}
       />
 
@@ -136,24 +135,25 @@ import MapGallery from 'astro-gallery/components/MapGallery.astro';
         <code>caption</code> renders as an always-visible <code>&lt;figcaption&gt;</code> under the image.
       </p>
       <ImageGallery
-        folderPath="demo"
+        folderPath="holidays"
         columns={4}
-        album="Rome walking tour"
+        album="Holiday snapshots"
         captions={{
-          '03-pantheon.jpg': 'The Pantheon portico — 2,000-year-old granite columns',
-          '07-castel-santangelo.jpg': "Castel Sant'Angelo from across the Tiber",
+          '4.jpg': 'A stop in Thuringia on the drive south',
+          '6.jpg': 'Along the Thames, early autumn',
         }}
       />
 
       <h2>&lt;ImageTimeline /&gt;</h2>
       <p>
-        Grouped by EXIF capture day. <code>orientation="horizontal"</code> (default) puts the days in
-        a rail you scroll sideways:
+        Grouped by EXIF capture day; photos without a date fall into an
+        <code>Undated</code> group at the end. <code>orientation="horizontal"</code> (default) puts the
+        days in a rail you scroll sideways:
       </p>
-      <ImageTimeline folderPath="demo" album="Rome walking tour" />
+      <ImageTimeline folderPath="holidays" album="Holiday snapshots" />
 
       <p><code>orientation="vertical"</code> stacks them down the page on a left-hand spine:</p>
-      <ImageTimeline folderPath="demo" album="Rome walking tour" orientation="vertical" />
+      <ImageTimeline folderPath="holidays" album="Holiday snapshots" orientation="vertical" />
 
       <h2>&lt;MapGallery /&gt;</h2>
       <p>
@@ -161,14 +161,14 @@ import MapGallery from 'astro-gallery/components/MapGallery.astro';
         consent gate. A crawlable thumbnail list is rendered underneath for search engines and no-JS
         visitors (view source). Default <code>basemap="osm"</code>:
       </p>
-      <MapGallery folderPath="demo" album="Rome walking tour" />
+      <MapGallery folderPath="holidays" album="Holiday snapshots" />
 
       <p>
         <code>basemap="esri-satellite"</code> — a different (keyless) style; the preset also forces the
         map controls dark. CARTO / Stadia dark presets work the same way but need a
         <code>tileApiKey</code>.
       </p>
-      <MapGallery folderPath="demo" album="Rome walking tour" basemap="esri-satellite" />
+      <MapGallery folderPath="holidays" album="Holiday snapshots" basemap="esri-satellite" />
     </main>
 
     <script>

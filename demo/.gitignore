@@ -7,8 +7,3 @@ node_modules/
 !.cache/astro-gallery/
 .cache/astro-gallery/*
 !.cache/astro-gallery/geocode.json
-
-# generated sample photos
-src/assets/images/demo/*.jpg
-src/assets/images/demo/*.jpeg
-src/assets/images/demo/*.png

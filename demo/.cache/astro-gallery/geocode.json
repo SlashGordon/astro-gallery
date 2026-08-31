@@ -3,5 +3,30 @@
     "city": "Rome",
     "country": "Italy",
     "label": "Rome, Italy"
+  },
+  "43.2,11.5": {
+    "city": "Asciano",
+    "country": "Italy",
+    "label": "Asciano, Italy"
+  },
+  "50.2,-5.5": {
+    "city": "Cornwall",
+    "country": "United Kingdom",
+    "label": "Cornwall, United Kingdom"
+  },
+  "50.3,-5.2": {
+    "city": "Cornwall",
+    "country": "United Kingdom",
+    "label": "Cornwall, United Kingdom"
+  },
+  "50.5,11.3": {
+    "city": "Gräfenthal",
+    "country": "Germany",
+    "label": "Gräfenthal, Germany"
+  },
+  "51.5,-0.1": {
+    "city": "City of Westminster",
+    "country": "United Kingdom",
+    "label": "City of Westminster, United Kingdom"
   }
 }
