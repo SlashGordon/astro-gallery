@@ -286,6 +286,32 @@ const jsonLd =
       (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string,
     );
 
+  const THUMB = 44; // marker thumbnail edge, px — keep in sync with .asg-map__marker
+  const CLUSTER_RADIUS = 52; // px — photos closer than this at the current zoom collapse into one pin
+
+  const caption = (m: RawMarker) => [m.location, m.date].filter(Boolean).join(' · ');
+
+  function bindPhotoPopup(marker: L.Marker, m: RawMarker): void {
+    const meta =
+      m.location || m.date
+        ? `<div class="asg-map__popup-meta">${[m.location, m.date]
+            .filter(Boolean)
+            .map((t) => `<span>${esc(t)}</span>`)
+            .join('')}</div>`
+        : '';
+
+    const wrap = document.createElement('div');
+    wrap.innerHTML =
+      `<a class="asg-map__popup-link" href="${esc(m.fullSrc)}">` +
+      `<img src="${esc(m.thumbSrc)}" alt="${esc(m.alt)}" loading="lazy" /></a>${meta}`;
+    wrap.querySelector('a')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      openLightbox([{ src: m.fullSrc, alt: m.alt, caption: caption(m) }]);
+    });
+
+    marker.bindPopup(L.popup({ maxWidth: 280, minWidth: 240, closeButton: true }).setContent(wrap));
+  }
+
   function buildMap(container: HTMLElement): void {
     const markers: RawMarker[] = JSON.parse(container.dataset.asgMarkers || '[]');
     if (!markers.length) return;
@@ -298,51 +324,82 @@ const jsonLd =
     container.appendChild(canvas);
 
     const bounds = L.latLngBounds(markers.map((m) => [m.lat, m.lng] as [number, number]));
+    const maxZoom = Number(container.dataset.asgMaxZoom) || 19;
     const map = L.map(canvas, { zoomControl: true }).fitBounds(bounds, { padding: [40, 40] });
     if (markers.length === 1) map.setZoom(13);
     setTimeout(() => map.invalidateSize(), 120);
 
     L.tileLayer(container.dataset.asgTileUrl!, {
-      maxZoom: Number(container.dataset.asgMaxZoom) || 19,
+      maxZoom,
       subdomains: container.dataset.asgSubdomains || 'abc',
       attribution: container.dataset.asgTileAttribution || '',
     }).addTo(map);
 
-    markers.forEach((m, i) => {
-      const icon = L.divIcon({
-        className: '',
-        html: `<img src="${esc(m.thumbSrc)}" class="asg-map__marker" width="44" height="44" alt="${esc(m.alt)}" />`,
-        iconSize: [44, 44],
-        iconAnchor: [22, 22],
-        popupAnchor: [0, -24],
-      });
+    const layer = L.layerGroup().addTo(map);
+    let firstRender = true;
 
-      const marker = L.marker([m.lat, m.lng], { icon, opacity: 0 }).addTo(map);
-      setTimeout(() => marker.setOpacity(1), 100 + i * 60);
+    // Grid-hash the photos in projected pixel space for the current zoom, so
+    // markers that would visually overlap merge into a single counted pin.
+    function render(): void {
+      layer.clearLayers();
+      const zoom = map.getZoom();
+      const cells = new Map<string, RawMarker[]>();
 
-      const meta =
-        m.location || m.date
-          ? `<div class="asg-map__popup-meta">${[m.location, m.date]
-              .filter(Boolean)
-              .map((t) => `<span>${esc(t)}</span>`)
-              .join('')}</div>`
-          : '';
+      for (const m of markers) {
+        const pt = map.project([m.lat, m.lng], zoom);
+        const key = `${Math.floor(pt.x / CLUSTER_RADIUS)}:${Math.floor(pt.y / CLUSTER_RADIUS)}`;
+        const cell = cells.get(key);
+        if (cell) cell.push(m);
+        else cells.set(key, [m]);
+      }
 
-      const wrap = document.createElement('div');
-      wrap.innerHTML =
-        `<a class="asg-map__popup-link" href="${esc(m.fullSrc)}">` +
-        `<img src="${esc(m.thumbSrc)}" alt="${esc(m.alt)}" loading="lazy" /></a>${meta}`;
-      wrap.querySelector('a')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        openLightbox([
-          { src: m.fullSrc, alt: m.alt, caption: [m.location, m.date].filter(Boolean).join(' · ') },
-        ]);
-      });
+      let i = 0;
+      for (const members of cells.values()) {
+        const count = members.length;
+        const head = members[0];
+        const lat = members.reduce((s, m) => s + m.lat, 0) / count;
+        const lng = members.reduce((s, m) => s + m.lng, 0) / count;
 
-      marker.bindPopup(
-        L.popup({ maxWidth: 280, minWidth: 240, closeButton: true }).setContent(wrap),
-      );
-    });
+        const icon = L.divIcon({
+          className: '',
+          html:
+            `<div class="asg-map__pin">` +
+            `<img src="${esc(head.thumbSrc)}" class="asg-map__marker" width="${THUMB}" height="${THUMB}" alt="${esc(head.alt)}" />` +
+            (count > 1 ? `<span class="asg-map__cluster-badge">${count}</span>` : '') +
+            `</div>`,
+          iconSize: [THUMB, THUMB],
+          iconAnchor: [THUMB / 2, THUMB / 2],
+          popupAnchor: [0, -THUMB / 2 - 2],
+        });
+
+        const marker = L.marker([lat, lng], { icon, opacity: firstRender ? 0 : 1 }).addTo(layer);
+        if (firstRender) setTimeout(() => marker.setOpacity(1), 100 + i * 50);
+        i += 1;
+
+        if (count === 1) {
+          bindPhotoPopup(marker, head);
+          continue;
+        }
+
+        const cluster = L.latLngBounds(members.map((m) => [m.lat, m.lng] as [number, number]));
+        marker.on('click', () => {
+          const canZoom = map.getZoom() < maxZoom;
+          const spread =
+            cluster.isValid() && !cluster.getNorthEast().equals(cluster.getSouthWest());
+          if (canZoom && spread) {
+            map.flyToBounds(cluster, { padding: [60, 60] });
+          } else {
+            // Same spot at max detail — page through the stack in the lightbox.
+            openLightbox(members.map((m) => ({ src: m.fullSrc, alt: m.alt, caption: caption(m) })));
+          }
+        });
+      }
+
+      firstRender = false;
+    }
+
+    map.on('zoomend', render);
+    render();
   }
 
   function handleConsent(container: HTMLElement): void {

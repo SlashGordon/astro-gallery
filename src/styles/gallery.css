@@ -55,7 +55,8 @@
 .asg-gallery__item img,
 .asg-jgallery__item img,
 .asg-timeline__item img,
-.asg-map__fallback img {
+.asg-map__fallback img,
+.asg-map__popup-link img {
   margin: 0 !important;
   max-width: none !important;
   border-radius: 0 !important;
@@ -717,16 +718,54 @@
   border-color: var(--asg-border) !important;
 }
 
+.asg-map__pin {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+}
+
+/*
+ * Size is pinned here with `!important` (not just the width/height attributes):
+ * host `img` rules — Tailwind Typography's `.prose img`, resets with
+ * `width: auto` / `max-width: 100%` — otherwise override the attributes and the
+ * thumbnail balloons to its intrinsic size, covering the map.
+ */
 .asg-map__marker {
+  width: 44px !important;
+  height: 44px !important;
+  max-width: none !important;
+  margin: 0 !important;
+  box-sizing: border-box;
   border: 3px solid #fff;
-  border-radius: 50%;
+  border-radius: 50% !important;
   object-fit: cover;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease;
 }
 
-.asg-map__marker:hover {
+.asg-map__pin:hover .asg-map__marker {
   transform: scale(1.12);
+}
+
+.asg-map__cluster-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--asg-accent);
+  color: var(--asg-accent-contrast);
+  font:
+    600 12px / 20px system-ui,
+    -apple-system,
+    sans-serif;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
 }
 
 .asg-map__popup-link {

@@ -1,3 +1,0 @@
-# Sample photos are generated here by `demo/scripts/generate-sample-photos.mjs`
-# (runs automatically before `npm run dev` / `npm run build`).
-# Drop your own .jpg files here to use them instead — generation then skips.
