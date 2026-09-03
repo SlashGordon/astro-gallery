@@ -280,6 +280,21 @@ gallery({
 Tile keys are requested from the browser, so use a **domain-restricted** key — it
 will be visible in page source.
 
+#### Content Security Policy
+
+Tiles load as `<img>` from the provider's CDN, so a strict `img-src` policy will
+block them. Allow the host for the `basemap` you use (add `data:` for the SSR
+fallback thumbnails, which are `astro:assets` output and covered by `'self'`):
+
+| `basemap`        | `img-src` host to allow                        |
+| ---------------- | ---------------------------------------------- |
+| `osm` _(default)_ | `https://*.tile.openstreetmap.org https://tile.openstreetmap.org` |
+| `carto-*`        | `https://*.basemaps.cartocdn.com`              |
+| `stadia-dark`    | `https://tiles.stadiamaps.com`                 |
+| `esri-satellite` | `https://server.arcgisonline.com`             |
+
+For a custom `tileUrl`, allow that provider's tile host.
+
 ---
 
 ## Captions
@@ -517,3 +532,10 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md). There is a runnable playground in
 ## License
 
 [MIT](./LICENSE) © SlashGordon
+
+## Support
+
+If this package saves you time, consider buying me a coffee — it keeps the
+maintenance going.
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-SlashGordon-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/SlashGordon)
