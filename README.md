@@ -3,8 +3,8 @@
 ![Best astro gallery for your web project](astro-gallery.png)
 
 Folder-driven image galleries for [Astro](https://astro.build) — a justified
-layout, a responsive grid, an **EXIF-date timeline**, and a **GDPR-friendly photo
-map**. Every image goes through `astro:assets` (optimised, correctly-sized
+layout, a responsive grid, an EXIF-date timeline, and a GDPR-friendly photo
+map. Every image goes through `astro:assets` (optimised, correctly-sized
 `webp`/`avif` with `srcset`), and every component ships semantic HTML, native
 lazy loading, resolved `alt` text and `ImageGallery` JSON-LD out of the box.
 
@@ -22,7 +22,7 @@ Point a component at a folder in `src/`, drop your photos in, done:
 | `JustifiedGallery` | Aspect-ratio-aware rows that fill the width edge-to-edge (Flickr/Unsplash style). Responsive `srcset`, blur-up skeletons, `content-visibility`, JSON-LD. Zero layout JS.                                 |
 | `ImageGallery`     | Uniform responsive CSS grid, click to open a lightbox with arrow-key navigation. Also accepts an explicit `images={[…]}` list.                                                                           |
 | `ImageTimeline`    | Reads each photo's EXIF capture date, groups by day and lays the days out on a timeline — a horizontal scrolling rail or a vertical spine (`<ol>` + `<time>`). Optional reverse-geocoded location label. |
-| `MapGallery`       | Reads GPS EXIF, drops a circular photo marker per location on a Leaflet map. Consent gate so **no external tile request happens before the visitor agrees**; crawlable fallback.                         |
+| `MapGallery`       | Reads GPS EXIF, drops a circular photo marker per location on a Leaflet map. Consent gate, so no external tile request happens before the visitor agrees; crawlable fallback.                            |
 
 ---
 
@@ -192,7 +192,7 @@ configurable via the integration's `undatedLabel`).
 <MapGallery folderPath="trips/rome" />
 ```
 
-Images **without** GPS EXIF are silently skipped; if none of the photos have GPS
+Images without GPS EXIF are silently skipped; if none of the photos have GPS
 the component renders nothing.
 
 | Prop                                                  | Type                      | Default                     | Notes                                                    |
@@ -222,7 +222,7 @@ no-JS visitors; the client script removes it once the interactive map is built.
 
 Map tiles are fetched from a third-party CDN, which exposes the visitor's IP
 address. By default `MapGallery` renders an overlay explaining this and loads
-**nothing** from the network until the visitor clicks the button. The decision
+nothing from the network until the visitor clicks the button. The decision
 is stored in `localStorage` under `consentKey`. Set `consent={false}` (or
 `map.consent: false` on the integration) to opt out of the gate — e.g. if you
 self-host tiles.
@@ -286,12 +286,12 @@ Tiles load as `<img>` from the provider's CDN, so a strict `img-src` policy will
 block them. Allow the host for the `basemap` you use (add `data:` for the SSR
 fallback thumbnails, which are `astro:assets` output and covered by `'self'`):
 
-| `basemap`        | `img-src` host to allow                        |
-| ---------------- | ---------------------------------------------- |
+| `basemap`         | `img-src` host to allow                                           |
+| ----------------- | ----------------------------------------------------------------- |
 | `osm` _(default)_ | `https://*.tile.openstreetmap.org https://tile.openstreetmap.org` |
-| `carto-*`        | `https://*.basemaps.cartocdn.com`              |
-| `stadia-dark`    | `https://tiles.stadiamaps.com`                 |
-| `esri-satellite` | `https://server.arcgisonline.com`             |
+| `carto-*`         | `https://*.basemaps.cartocdn.com`                                 |
+| `stadia-dark`     | `https://tiles.stadiamaps.com`                                    |
+| `esri-satellite`  | `https://server.arcgisonline.com`                                 |
 
 For a custom `tileUrl`, allow that provider's tile host.
 
@@ -395,8 +395,8 @@ but set your own `userAgent`. To disable geocoding entirely: `geocode: { enabled
 
 ### Multi-language text
 
-Every user-facing string option accepts **either a plain string or a
-`LocalizedText` dictionary** keyed by locale/language code:
+Every user-facing string option accepts either a plain string or a
+`LocalizedText` dictionary keyed by locale/language code:
 
 ```ts
 gallery({

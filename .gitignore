@@ -20,3 +20,4 @@ coverage/
 # Not authored in this session — see note to user
 repo-banner.png
 repo-banner.svg
+.agents/*
