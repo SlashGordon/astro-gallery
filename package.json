@@ -52,11 +52,13 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc -p tsconfig.build.json",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check:viewer": "node scripts/inspect-editorial-viewer.mjs",
+    "screenshots": "npm --prefix demo run build && node scripts/capture-screenshots.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "dev:demo": "npm --prefix demo run dev",
@@ -78,6 +80,7 @@
   "devDependencies": {
     "@types/node": "^26.4.1",
     "astro": "^7.2.9",
+    "playwright": "^1.63.0",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^0.14.1",
     "tsup": "^8.5.1",

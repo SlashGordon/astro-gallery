@@ -16,14 +16,16 @@ npm --prefix demo install   # once, for the playground
 
 ## Handy scripts
 
-| Command              | What it does                                                    |
-| -------------------- | --------------------------------------------------------------- |
-| `npm run demo`       | Start the playground in `demo/` (Astro dev server).             |
-| `npm run demo:build` | Production build of the playground — the best end-to-end check. |
-| `npm test`           | Run the unit tests (Vitest).                                    |
-| `npm run typecheck`  | `tsc --noEmit` over the package sources.                        |
-| `npm run build`      | Build the integration entry to `dist/` (tsup).                  |
-| `npm run format`     | Prettier write. `npm run format:check` in CI.                   |
+| Command                | What it does                                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run demo`         | Start the playground in `demo/` (Astro dev server).                                                                                   |
+| `npm run demo:build`   | Production build of the playground — the best end-to-end check.                                                                       |
+| `npm test`             | Run the unit tests (Vitest).                                                                                                          |
+| `npm run typecheck`    | `tsc --noEmit` over the package sources.                                                                                              |
+| `npm run build`        | Build the integration entry to `dist/` (tsup).                                                                                        |
+| `npm run format`       | Prettier write. `npm run format:check` in CI.                                                                                         |
+| `npm run check:viewer` | Headless-browser geometry probe for the `EditorialGallery` viewer. Needs the demo running and `npx playwright install chromium` once. |
+| `npm run screenshots`  | Rebuild the README screenshots from the demo. Needs `npx playwright install chromium` and ImageMagick.                                |
 
 ## Project layout
 

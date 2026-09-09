@@ -28,5 +28,10 @@
     "city": "City of Westminster",
     "country": "United Kingdom",
     "label": "City of Westminster, United Kingdom"
+  },
+  "53.3,9.7": {
+    "city": "Tostedt",
+    "country": "Germany",
+    "label": "Tostedt, Germany"
   }
 }

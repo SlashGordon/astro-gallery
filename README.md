@@ -3,8 +3,8 @@
 ![Best astro gallery for your web project](astro-gallery.png)
 
 Folder-driven image galleries for [Astro](https://astro.build) — a justified
-layout, a responsive grid, an EXIF-date timeline, and a GDPR-friendly photo
-map. Every image goes through `astro:assets` (optimised, correctly-sized
+layout, a responsive grid, an editorial reader, a glass-caption slideshow, an
+EXIF-date timeline, and a GDPR-friendly photo map. Every image goes through `astro:assets` (optimised, correctly-sized
 `webp`/`avif` with `srcset`), and every component ships semantic HTML, native
 lazy loading, resolved `alt` text and `ImageGallery` JSON-LD out of the box.
 
@@ -13,6 +13,8 @@ Point a component at a folder in `src/`, drop your photos in, done:
 ```astro
 <JustifiedGallery folderPath="trips/rome" album="Rome, 2024" />
 <ImageGallery folderPath="trips/rome" columns={4} />
+<EditorialGallery folderPath="trips/rome" album="Rome, 2024" />
+<SlideshowGallery folderPath="trips/rome" album="Rome, 2024" />
 <ImageTimeline folderPath="trips/rome" />
 <MapGallery folderPath="trips/rome" />
 ```
@@ -21,6 +23,8 @@ Point a component at a folder in `src/`, drop your photos in, done:
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `JustifiedGallery` | Aspect-ratio-aware rows that fill the width edge-to-edge (Flickr/Unsplash style). Responsive `srcset`, blur-up skeletons, `content-visibility`, JSON-LD. Zero layout JS.                                 |
 | `ImageGallery`     | Uniform responsive CSS grid, click to open a lightbox with arrow-key navigation. Also accepts an explicit `images={[…]}` list.                                                                           |
+| `EditorialGallery` | The justified layout with a two-pane fullscreen reader: photo left, caption panel right (title, caption, date, camera, place, pixel size), filmstrip, collapsible panel.                                 |
+| `SlideshowGallery` | One photo at a time on a translate-driven track, with a glassmorphism caption card that rises on hover or focus. Pointer drag, keyboard, dots, optional autoplay with a pause control.                   |
 | `ImageTimeline`    | Reads each photo's EXIF capture date, groups by day and lays the days out on a timeline — a horizontal scrolling rail or a vertical spine (`<ol>` + `<time>`). Optional reverse-geocoded location label. |
 | `MapGallery`       | Reads GPS EXIF, drops a circular photo marker per location on a Leaflet map. Consent gate, so no external tile request happens before the visitor agrees; crawlable fallback.                            |
 
@@ -80,6 +84,8 @@ Import the components from `astro-gallery/components/…`:
 ---
 import JustifiedGallery from 'astro-gallery/components/JustifiedGallery.astro';
 import ImageGallery from 'astro-gallery/components/ImageGallery.astro';
+import EditorialGallery from 'astro-gallery/components/EditorialGallery.astro';
+import SlideshowGallery from 'astro-gallery/components/SlideshowGallery.astro';
 import ImageTimeline from 'astro-gallery/components/ImageTimeline.astro';
 import MapGallery from 'astro-gallery/components/MapGallery.astro';
 ---
@@ -94,6 +100,8 @@ aspect ratio, so nothing is cropped to a fixed grid cell. Built for Core Web
 Vitals: `srcset`/`sizes`, intrinsic `width`/`height` (no CLS), `content-visibility`
 to skip offscreen work, blur-up skeletons, and the first images marked
 `fetchpriority="high"`.
+
+![JustifiedGallery — aspect-ratio-aware rows filling the container width](docs/screenshots/justified-gallery.jpg)
 
 ```astro
 <JustifiedGallery
@@ -120,6 +128,13 @@ to skip offscreen work, blur-up skeletons, and the first images marked
 | `structuredData` | `boolean`                   | integration setting  | Emit `ImageGallery` JSON-LD.                                         |
 
 ### `ImageGallery`
+
+![ImageGallery — a uniform responsive grid with captions under each image](docs/screenshots/image-gallery.jpg)
+
+Click any image for the built-in lightbox — arrow keys, `Esc`, and the caption
+carried through:
+
+![The built-in lightbox showing a single photo with its caption](docs/screenshots/lightbox.jpg)
 
 **Folder mode** — every image in `src/assets/images/trips/rome/`, sorted by
 filename (natural sort, so `2.jpg` before `10.jpg`):
@@ -163,7 +178,149 @@ import sunrise from '../assets/sunrise.jpg';
 
 Without JavaScript the thumbnails are still plain links to the full-size image.
 
+### `EditorialGallery`
+
+The same justified rows as `JustifiedGallery`, but clicking a photo opens a
+two-pane reader instead of a plain lightbox: the picture on the left, a caption
+panel on the right. The panel carries the title, the caption and the EXIF facts
+— capture date, camera, reverse-geocoded place and the source pixel size — all
+resolved at build time. Behind it sits a heavily blurred copy of the current
+photo, so the panel glass takes on the picture's colour.
+
+![EditorialGallery — the fullscreen reader with the photo left and the caption panel right](docs/screenshots/editorial-viewer.jpg)
+
+```astro
+<EditorialGallery
+  folderPath="trips/rome"
+  album="Rome, 2024"
+  titles={{ 'piazza-navona.jpg': 'Fountain of the Four Rivers' }}
+  captions={{ 'piazza-navona.jpg': 'Bernini, 1651 — best an hour before sunset.' }}
+/>
+```
+
+In the viewer: `←` / `→` and `Home` / `End` move, the filmstrip jumps, `Esc`
+closes, swipe works on touch, and the button in the panel header collapses the
+panel for a full-bleed view. Focus is trapped while it is open and restored to
+the thumbnail you came from. Below 900px the panel becomes a bottom sheet.
+
+Titles and captions fall back to embedded metadata when you do not pass an
+override — IPTC `ObjectName` / XMP `dc:title` for the title, and the same
+description tags [`captions`](#captions) uses for the body. A photo with neither
+just shows its `alt` as the title.
+
+| Prop             | Type                                | Default              | Notes                                                            |
+| ---------------- | ----------------------------------- | -------------------- | ---------------------------------------------------------------- |
+| `folderPath`     | `string`                            | –                    | Folder relative to `src/<imagesDir>/`.                           |
+| `images`         | `{ src, alt?, title?, caption? }[]` | –                    | Use instead of `folderPath`. No EXIF facts in this mode.         |
+| `baseDir`        | `string`                            | `imagesDir`          | Override the base folder.                                        |
+| `rowHeight`      | `number`                            | `280`                | Target row height in px.                                         |
+| `gap`            | `string`                            | `1rem`               | CSS gap between items.                                           |
+| `eager`          | `number`                            | `2`                  | First N images load eagerly with `fetchpriority="high"`.         |
+| `alt`            | `Record<string,string>`             | `{}`                 | Per-file `alt` overrides (folder mode).                          |
+| `captions`       | `Record<string,string>`             | `{}`                 | Per-file caption overrides (folder mode).                        |
+| `titles`         | `Record<string,string>`             | `{}`                 | Per-file panel-title overrides (folder mode).                    |
+| `album`          | `string`                            | –                    | Panel eyebrow, accessible label, fallback `alt`, JSON-LD `name`. |
+| `locale`         | `string`                            | integration setting  | Formats the capture date and resolves `labels`.                  |
+| `geocode`        | `boolean`                           | integration setting  | Reverse-geocode the place name shown in the panel.               |
+| `showMeta`       | `boolean`                           | `true`               | Show the date / camera / place / size block at all.              |
+| `sizes`          | `string`                            | `1–3 col responsive` | `<img sizes>` attribute.                                         |
+| `structuredData` | `boolean`                           | integration setting  | Emit `ImageGallery` JSON-LD.                                     |
+| `labels`         | `EditorialLabelOptions`             | English              | Viewer UI strings — see below.                                   |
+
+`labels` retitles the panel's own copy. Every entry takes a string or a
+[locale dictionary](#multi-language-text):
+
+```astro
+<EditorialGallery
+  folderPath="trips/rome"
+  locale="de-DE"
+  labels={{
+    date: 'Aufnahme',
+    location: 'Ort',
+    camera: 'Kamera',
+    dimensions: 'Größe',
+    close: 'Schließen',
+    previous: 'Vorheriges Foto',
+    next: 'Nächstes Foto',
+    showDetails: 'Details einblenden',
+    hideDetails: 'Details ausblenden',
+  }}
+/>
+```
+
+The viewer keeps its own dark palette regardless of the page theme. Retheme it
+through the `--eglb-*` custom properties on `.asg-eglb` — `--eglb-panel-w`,
+`--eglb-bg`, `--eglb-glass`, `--eglb-text`, `--eglb-body`, `--eglb-muted`,
+`--eglb-faint` and `--eglb-line`.
+
+### `SlideshowGallery`
+
+One photo at a time on a track that is moved with a single `translate3d()` —
+never a width or a margin — so slide changes stay on the compositor. The easing
+is an expo-out curve (`cubic-bezier(0.16, 1, 0.3, 1)`) over 720ms, so a slide
+starts fast and settles slowly.
+
+The caption is a glassmorphism card (`backdrop-filter: blur(22px) saturate(180%)`)
+inset from the stage, which floats up and fades in when you hover or focus the
+current slide.
+
+![SlideshowGallery — a rounded stage with a glassmorphism caption card raised over the photo](docs/screenshots/slideshow-gallery.jpg)
+
+```astro
+<SlideshowGallery
+  folderPath="trips/rome"
+  album="Rome, 2024"
+  aspectRatio="16 / 9"
+  titles={{ 'piazza-navona.jpg': 'Fountain of the Four Rivers' }}
+  captions={{ 'piazza-navona.jpg': 'Bernini, 1651 — best an hour before sunset.' }}
+/>
+```
+
+Drag it with a pointer and the track follows 1:1, then settles on the same
+curve; a drag past 15% of the stage changes slide. `←` / `→` / `Home` / `End`
+work once the slideshow has focus, off-screen slides are `inert` (out of the
+tab order and the a11y tree), and a polite live region announces `"3 of 13"`.
+
+| Prop                          | Type                                | Default             | Notes                                                                                                        |
+| ----------------------------- | ----------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `folderPath`                  | `string`                            | –                   | Folder relative to `src/<imagesDir>/`.                                                                       |
+| `images`                      | `{ src, alt?, title?, caption? }[]` | –                   | Use instead of `folderPath`. No EXIF facts in this mode.                                                     |
+| `aspectRatio`                 | `string`                            | `"16 / 10"`         | CSS aspect ratio for the stage.                                                                              |
+| `radius`                      | `string`                            | `"24px"`            | Corner radius of the stage.                                                                                  |
+| `fit`                         | `"cover" \| "contain"`              | `"cover"`           | `contain` shows the whole frame and fills the letterbox with a blurred copy — use it for mixed orientations. |
+| `captionMode`                 | `"hover" \| "always" \| "none"`     | `"hover"`           | When the glass card shows. Always visible on touch.                                                          |
+| `autoplay`                    | `boolean`                           | `false`             | Adds a pause control. Never starts under reduced motion.                                                     |
+| `interval`                    | `number`                            | `6000`              | Autoplay delay in ms (min 1500).                                                                             |
+| `loop`                        | `boolean`                           | `true`              | Wrap past the ends. `false` disables the arrows at the extremes.                                             |
+| `dots`                        | `boolean`                           | `true`              | Render the dot indicators.                                                                                   |
+| `showMeta`                    | `boolean`                           | `true`              | Place / capture date line in the card.                                                                       |
+| `geocode`                     | `boolean`                           | integration setting | Reverse-geocode the place name.                                                                              |
+| `eager`                       | `number`                            | `1`                 | First N slides load eagerly.                                                                                 |
+| `alt` / `captions` / `titles` | `Record<string,string>`             | `{}`                | Per-file overrides (folder mode).                                                                            |
+| `album`                       | `string`                            | –                   | Accessible label, fallback `alt`, JSON-LD `name`.                                                            |
+| `locale`                      | `string`                            | integration setting | Formats the capture date, resolves `labels`.                                                                 |
+| `sizes`                       | `string`                            | full-width stage    | `<img sizes>` attribute.                                                                                     |
+| `structuredData`              | `boolean`                           | integration setting | Emit `ImageGallery` JSON-LD.                                                                                 |
+| `labels`                      | `SlideshowLabelOptions`             | English             | `previous`, `next`, `play`, `goToSlide` (`{n}` is the number).                                               |
+
+Retheme through the custom properties on `.asg-slides`: `--asg-slides-duration`,
+`--asg-slides-ease`, `--asg-slides-radius`, `--asg-slides-ar`,
+`--asg-slides-glass`, `--asg-slides-hairline`, `--asg-slides-chip` and
+`--asg-slides-chip-hover`.
+
+Under `prefers-reduced-motion` the track transition, the card's rise and the
+control hover transforms are all dropped, and autoplay never starts.
+
 ### `ImageTimeline`
+
+Groups photos by EXIF capture day. `orientation="horizontal"` (the default) lays
+the days out on a rail you scroll sideways:
+
+![ImageTimeline — days laid out along a horizontal scrolling rail](docs/screenshots/image-timeline.jpg)
+
+`orientation="vertical"` stacks them down the page on a left-hand spine:
+
+![ImageTimeline in vertical orientation, days stacked down a left-hand spine](docs/screenshots/image-timeline-vertical.jpg)
 
 ```astro
 <ImageTimeline folderPath="trips/rome" maxPerGroup={4} />
@@ -187,6 +344,11 @@ Photos with no EXIF date collapse into a single trailing group (label
 configurable via the integration's `undatedLabel`).
 
 ### `MapGallery`
+
+![MapGallery — photo markers on an OpenStreetMap basemap, nearby photos clustered with a count badge](docs/screenshots/map-gallery.jpg)
+
+Markers closer than ~52px at the current zoom collapse into one counted pin;
+clicking it zooms to the group.
 
 ```astro
 <MapGallery folderPath="trips/rome" />
@@ -219,6 +381,8 @@ Even with the map, an SSR-rendered `<ul>` of linked thumbnails (with `alt`,
 no-JS visitors; the client script removes it once the interactive map is built.
 
 #### The consent gate
+
+![The map consent gate — no tiles are requested until the visitor accepts](docs/screenshots/map-consent.jpg)
 
 Map tiles are fetched from a third-party CDN, which exposes the visitor's IP
 address. By default `MapGallery` renders an overlay explaining this and loads
@@ -300,11 +464,12 @@ For a custom `tileUrl`, allow that provider's tile host.
 ## Captions
 
 Captions render as a `<figcaption>` (always visible in `ImageGallery`, revealed
-on hover/focus in `JustifiedGallery`) and also feed the lightbox caption and the
-JSON-LD `caption`. Three ways to set them:
+on hover/focus in `JustifiedGallery` and `EditorialGallery`) and also feed the
+lightbox caption and the JSON-LD `caption`. In `EditorialGallery` the caption is
+the panel's body text. Three ways to set them:
 
-**Folder mode — the `captions` prop** (`JustifiedGallery`, `ImageGallery`). A map
-of _file name_ → caption; files you omit have none:
+**Folder mode — the `captions` prop** (`JustifiedGallery`, `ImageGallery`,
+`EditorialGallery`). A map of _file name_ → caption; files you omit have none:
 
 ```astro
 <JustifiedGallery
@@ -508,6 +673,9 @@ photo N"`. Name your files well or pass `alt={{ 'file.jpg': '…' }}` and you ge
   during SSR only — nothing EXIF-related ships to the browser.
 - **The lightbox** is ~2 kB of dependency-free JS, re-initialised on
   `astro:page-load` / `astro:after-swap` so it survives View Transitions.
+  `EditorialGallery` ships its own viewer instead (~3 kB, same lifecycle), so a
+  page that does not use it never downloads it. `SlideshowGallery` likewise
+  carries its own ~2.5 kB of track/drag logic.
 - **Leaflet** is imported in a client `<script>`, so the map library is only
   downloaded on pages that actually use `MapGallery` — and only after consent.
 

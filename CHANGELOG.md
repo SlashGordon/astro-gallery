@@ -6,6 +6,30 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **`<SlideshowGallery />`** — one photo at a time on a track driven by a single
+  `translate3d()` (never widths or margins), eased on a `cubic-bezier(0.16, 1, 0.3, 1)`
+  expo-out curve. The caption is a glassmorphism card inset from the 24px stage
+  that rises and fades in on hover or focus of the current slide, and stays open
+  on touch. Pointer drag tracks 1:1 and settles on the same curve; arrow /
+  `Home` / `End` keys, dot indicators, and optional autoplay with a pause
+  control. Off-screen slides are `inert`, slide changes are announced through a
+  polite live region, and everything is dropped under `prefers-reduced-motion`.
+  Props include `aspectRatio`, `radius`, `fit` (`cover` / `contain`, the latter
+  filling the letterbox with a blurred copy of the frame), `captionMode`,
+  `autoplay` / `interval`, `loop`, `dots` and a locale-aware `labels`.
+
+- **`<EditorialGallery />`** — the `JustifiedGallery` layout with a two-pane
+  fullscreen reader: the photo on the left, a caption panel on the right holding
+  the title, the caption and the EXIF facts (capture date, camera,
+  reverse-geocoded place, source pixel size), over a blurred wash of the current
+  photo. Filmstrip navigation, a collapsible panel, arrow/`Home`/`End` keys,
+  touch swipe, a focus trap and focus restore, and a bottom-sheet layout below
+  900px. New `titles` prop for per-file panel titles and a `labels` prop
+  (locale-dictionary aware) for the viewer's own copy; retheme through the
+  `--eglb-*` custom properties.
+
 ## [1.0.4] - 2026-08-31
 
 ### Fixed
