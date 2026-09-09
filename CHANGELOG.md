@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0](https://github.com/SlashGordon/astro-gallery/compare/v1.0.4...v1.1.0) (2026-09-09)
+
+
+### Features
+
+* add EditorialGallery and SlideshowGallery components ([c97be4b](https://github.com/SlashGordon/astro-gallery/commit/c97be4ba451ada65530789047be4c965b8e8340b))
+* add EditorialGallery and SlideshowGallery components ([6541c51](https://github.com/SlashGordon/astro-gallery/commit/6541c517eddeae3b449599cb1f2aedbe9be91a88))
+
 ## [Unreleased]
 
 ### Added
