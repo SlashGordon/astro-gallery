@@ -1,8 +1,26 @@
 ---
 import ImageGallery from 'astro-gallery/components/ImageGallery.astro';
+import EditorialGallery from 'astro-gallery/components/EditorialGallery.astro';
 import JustifiedGallery from 'astro-gallery/components/JustifiedGallery.astro';
+import SlideshowGallery from 'astro-gallery/components/SlideshowGallery.astro';
 import ImageTimeline from 'astro-gallery/components/ImageTimeline.astro';
 import MapGallery from 'astro-gallery/components/MapGallery.astro';
+
+const photoTitles = {
+  '1.jpg': 'The field above the beach',
+  '2.jpg': 'The climb to the engine house',
+  '3.jpg': 'Cliffs, heather, and one impatient dog',
+  '4.jpg': 'Slate roofs, Thuringia',
+  '5.jpg': 'South bank, shot from the north',
+  '6.jpg': "Morton's Tower",
+  '7.jpg': 'The track up to the farmhouse',
+  '8.jpg': 'Baltic, out of season',
+  '9.jpg': 'Beech wood in November',
+  '10.jpg': 'Pine and heath in January',
+  '11.jpg': 'Poppies at the field edge',
+  '12.jpg': 'Bench, birches, lake',
+  '13.jpg': 'The heath comes over all at once',
+};
 ---
 
 <html lang="en">
@@ -94,17 +112,18 @@ import MapGallery from 'astro-gallery/components/MapGallery.astro';
       <header>
         <h1>astro-gallery</h1>
         <p>
-          Four folder-driven components, all reading from
-          <code>src/assets/images/holidays/</code>. These are real holiday snapshots — most carry
-          EXIF (capture date + GPS), so the timeline and map have data to work with; the few phone
-          messenger exports with their metadata stripped still show up in the two grid layouts. View
-          source to see the semantic markup and JSON-LD.
+          Six folder-driven components, all reading from
+          <code>src/assets/images/holidays/</code>. These are real holiday snapshots. Most carry
+          EXIF (capture date + GPS), so the timeline and the map have something to work with. A few
+          are messenger exports with the metadata stripped, so they land in the timeline's
+          <code>Undated</code> group and never on the map. View source for the semantic markup and the
+          JSON-LD.
         </p>
       </header>
 
       <p class="callout">
-        The next two sections render the <strong>same thirteen photos</strong> — a mix of landscape, portrait
-        and panorama shot on different trips. Only the <em>layout</em> differs.
+        The next two sections render the <strong>same thirteen photos</strong> — a mix of landscape and
+        portrait, shot on different trips. Only the <em>layout</em> differs.
       </p>
 
       <h2>&lt;JustifiedGallery /&gt;</h2>
@@ -120,11 +139,11 @@ import MapGallery from 'astro-gallery/components/MapGallery.astro';
         rowHeight={220}
         alt={{
           '1.jpg': 'Evening light on the Cornwall coast',
-          '7.jpg': 'A hill town in the Tuscan countryside',
+          '7.jpg': 'A dirt track climbing to a farmhouse on a Tuscan ridge',
         }}
         captions={{
-          '5.jpg': 'A grey afternoon in London',
-          '7.jpg': 'Tuscany, late August — the road up to the village',
+          '5.jpg': 'The London Eye and County Hall from the Embankment',
+          '7.jpg': 'Tuscany, late August — the track up to the ridge',
         }}
       />
 
@@ -139,9 +158,132 @@ import MapGallery from 'astro-gallery/components/MapGallery.astro';
         columns={4}
         album="Holiday snapshots"
         captions={{
-          '4.jpg': 'A stop in Thuringia on the drive south',
-          '6.jpg': 'Along the Thames, early autumn',
+          '4.jpg': 'A slate-roofed valley town in the Thuringian Forest',
+          '6.jpg': 'Lambeth Palace gatehouse, early autumn',
         }}
+      />
+
+      <h2>&lt;EditorialGallery /&gt;</h2>
+      <p>
+        The same justified rows, but clicking a photo opens a two-pane reader: the picture on the
+        left, a caption panel on the right carrying the title, the caption and the EXIF facts (date,
+        camera, place, pixel size). The panel glass picks up colour from a blurred copy of the
+        current photo. Use <kbd>←</kbd> / <kbd>→</kbd> to move, the filmstrip to jump, and the button
+        in the panel header to collapse it for a clean full-bleed view.
+      </p>
+      <p>
+        All thirteen photos carry a title and a paragraph of copy, so the panel always has something
+        to hold. The EXIF block sits at the foot of the column, and the copy above it keeps its
+        position whether the photo is a wide landscape or a tall portrait.
+      </p>
+      <EditorialGallery
+        folderPath="holidays"
+        album="Holiday snapshots"
+        rowHeight={260}
+        titles={{
+          '1.jpg': 'The field above the beach',
+          '2.jpg': 'The climb to the engine house',
+          '3.jpg': 'Cliffs, heather, and one impatient dog',
+          '4.jpg': 'Slate roofs, Thuringia',
+          '5.jpg': 'South bank, shot from the north',
+          '6.jpg': "Morton's Tower",
+          '7.jpg': 'The track up to the farmhouse',
+          '8.jpg': 'Baltic, out of season',
+          '9.jpg': 'Beech wood in November',
+          '10.jpg': 'Pine and heath in January',
+          '11.jpg': 'Poppies at the field edge',
+          '12.jpg': 'Bench, birches, lake',
+          '13.jpg': 'The heath comes over all at once',
+        }}
+        captions={{
+          '1.jpg':
+            'Two weeks without rain had taken the grass down to straw. We came up here most evenings because it was the only flat ground for a mile in any direction, and because of the thing the light does in August, where it turns the whole field the colour of the sand below it.',
+          '2.jpg':
+            'The coast path bends inland here and then throws you straight up the hill. The chimney has been standing since long after the tin ran out, and on a still day you can hear the sea working away at the cliff underneath it.',
+          '3.jpg':
+            'Caves cut into the headland below, the heather just going over, and a labrador who had decided some time ago that we were walking too slowly. This is about a mile past the point where the path stops pretending to have a handrail.',
+          '4.jpg':
+            'A valley town in the Thuringian Forest seen from the tower. Everything here is roofed in the local slate — the walls too, in places — so on a bright morning the whole place reads as one long grey-blue line with the hills closing in behind it.',
+          '5.jpg':
+            'October, and London had decided to put on the good weather: high cirrus, and the kind of blue you get about three times a year. The wheel does not photograph well from underneath, so you cross the river and take it from the Embankment with County Hall alongside for scale.',
+          '6.jpg':
+            'The red-brick gatehouse of Lambeth Palace, next to St Mary-at-Lambeth — which stopped being a parish church some time ago and is now the garden museum. The plane tree has been quietly winning the argument with both of them for about two hundred years.',
+          '7.jpg':
+            'Late August in the Crete Senesi, when the grass has gone gold and the ploughing has not started. The track climbs for a good twenty minutes to that house on the ridge. There is no shade anywhere along it, and we did it at two in the afternoon, which was a mistake.',
+          '8.jpg':
+            'Flat water, wooden groynes marching away to the right, and a beach wide enough that the sea looks further off than it really is. September on the Ostsee — warm sand, cold water, and almost nobody about.',
+          '9.jpg':
+            'The stream is barely a stream by this point in the year, just a dark line pulling the leaves downhill. Beech does the best autumn of any tree here: it holds that copper colour for weeks after the oaks have given up entirely.',
+          '10.jpg':
+            'Winter light through birch and Scots pine. Nothing is flowering, nothing is green except the needles, and the whole wood smells of wet sand — which is more or less what the ground is, this far north.',
+          '11.jpg':
+            "They come up in the strip the plough misses, every year, and they are gone again inside a fortnight. Taken at arm's length down into the grass, because the wind would not hold still long enough to do it any other way.",
+          '12.jpg':
+            'A swimming lake at the end of June, with the birches just about holding their shape against the light. The bench faces the water, which is the entire reason it is there.',
+          '13.jpg':
+            'The heath flowers all at once and then the horizon is purple for about three weeks. One oak, a great deal of sky, and enough bees working the ground that you can hear it from the path.',
+        }}
+      />
+
+      <h2>&lt;SlideshowGallery /&gt;</h2>
+      <p>
+        One photo at a time on a translate-driven track — nothing animates but a single
+        <code>transform</code> and some opacity, on an expo-out curve that starts fast and settles slowly.
+        Drag it with a mouse or a finger and the track follows you 1:1. Hover the image, or tab to the
+        slideshow and use <kbd>←</kbd> / <kbd>→</kbd>, to raise the glass caption card.
+      </p>
+      <SlideshowGallery
+        folderPath="holidays"
+        album="Holiday snapshots"
+        aspectRatio="16 / 9"
+        titles={photoTitles}
+        captions={{
+          '1.jpg':
+            'Two weeks without rain had taken the grass down to straw, and the light does this thing in August where it turns the whole field the colour of the sand below it.',
+          '2.jpg':
+            'The coast path bends inland here and then throws you straight up the hill. On a still day you can hear the sea working away at the cliff underneath the chimney.',
+          '3.jpg':
+            'Caves cut into the headland below, the heather just going over, and a labrador who had decided some time ago that we were walking too slowly.',
+          '4.jpg':
+            'Everything here is roofed in the local slate — the walls too, in places — so the whole valley reads as one long grey-blue line with the hills closing in behind it.',
+          '5.jpg':
+            'The wheel does not photograph well from underneath, so you cross the river and take it from the Embankment with County Hall alongside for scale.',
+          '6.jpg':
+            'The plane tree has been quietly winning its argument with the gatehouse and the church for about two hundred years.',
+          '7.jpg':
+            'The track climbs for a good twenty minutes to that house on the ridge. There is no shade anywhere along it, and we did it at two in the afternoon.',
+          '8.jpg':
+            'Flat water, wooden groynes marching away to the right, and a beach wide enough that the sea looks further off than it really is.',
+          '9.jpg':
+            'Beech does the best autumn of any tree here: it holds that copper colour for weeks after the oaks have given up entirely.',
+          '10.jpg':
+            'Nothing is flowering, nothing is green except the needles, and the whole wood smells of wet sand — which is more or less what the ground is.',
+          '11.jpg':
+            'They come up in the strip the plough misses, every year, and they are gone again inside a fortnight.',
+          '12.jpg':
+            'A swimming lake at the end of June, with the birches just about holding their shape against the light.',
+          '13.jpg':
+            'The heath flowers all at once and then the horizon is purple for about three weeks. Enough bees working the ground that you can hear it from the path.',
+        }}
+      />
+
+      <p>
+        <code>captionMode="always"</code> pins the card open, <code>autoplay</code> adds a timed advance
+        with a pause control (and never starts under <code>prefers-reduced-motion</code>), and <code
+          >radius</code
+        > / <code>aspectRatio</code> reshape the stage:
+      </p>
+      <SlideshowGallery
+        folderPath="holidays"
+        album="Holiday snapshots"
+        aspectRatio="21 / 9"
+        radius="8px"
+        fit="contain"
+        captionMode="always"
+        autoplay
+        interval={5000}
+        dots={false}
+        titles={photoTitles}
       />
 
       <h2>&lt;ImageTimeline /&gt;</h2>

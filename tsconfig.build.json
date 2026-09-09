@@ -1,0 +1,22 @@
+{
+  // Declaration emit for the published entry point.
+  //
+  // tsup's `dts` option is not usable here: it bundles types with
+  // `rollup-plugin-dts`, which drives the TypeScript *JS compiler API*
+  // (`ts.sys`, `ts.createProgram`). TypeScript 7 is the Go port and its npm
+  // package no longer exposes that API, so the plugin throws on load. `tsc`
+  // emits the same declarations directly, one file per module.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  // `src/components` is excluded: the .astro files ship as source and are
+  // compiled by the consumer's own Astro pipeline (see `exports` in package.json).
+  "include": ["src", "scripts/types"],
+  "exclude": ["dist", "node_modules", "demo", "test", "src/components"]
+}

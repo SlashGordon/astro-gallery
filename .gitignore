@@ -20,4 +20,10 @@ coverage/
 # Not authored in this session — see note to user
 repo-banner.png
 repo-banner.svg
-.agents/*
+
+# Agent skills / tooling — local only, not part of the package
+.claude/
+.agents/
+agent/
+skills-lock.json
+skills.json

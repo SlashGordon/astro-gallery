@@ -1,0 +1,386 @@
+---
+/**
+ * One image at a time on a translate-driven track, with a glass caption card
+ * that rises over the current slide on hover or focus.
+ *
+ * The track is the only thing that moves: a single `translate3d()` on a
+ * compositor-friendly transform, eased with a shared expo-out curve.
+ */
+import { readFile } from 'node:fs/promises';
+import type { ImageMetadata } from 'astro';
+import config from 'virtual:astro-gallery/config';
+import { resolveAlt } from '../internal/alt.js';
+import { readPhotoMeta } from '../internal/exif.js';
+import { responsiveImage } from '../internal/images.js';
+import { createGeocoder } from '../internal/geocode.js';
+import { basename, resolveFolder, selectFolderEntries, toAbsolute } from '../internal/paths.js';
+import { imageGalleryJsonLd, type LdImage } from '../internal/structured-data.js';
+import { pickText, type MaybeLocalized } from '../internal/i18n.js';
+import '../styles/gallery.css';
+
+type ImageInput = {
+  /** An `import`ed image, a `/public` path or a remote URL. */
+  src: string | ImageMetadata;
+  alt?: string;
+  title?: string;
+  caption?: string;
+};
+
+/** Control copy. Each entry is a string or a per-locale dictionary. */
+export interface SlideshowLabelOptions {
+  previous?: MaybeLocalized;
+  next?: MaybeLocalized;
+  play?: MaybeLocalized;
+  /** `"{n}"` is replaced with the slide number. */
+  goToSlide?: MaybeLocalized;
+}
+
+interface Props {
+  /** Folder relative to `src/<imagesDir>/` — every image inside is used, sorted by name. */
+  folderPath?: string;
+  /** Explicit images. Use this or `folderPath`, not both. */
+  images?: ImageInput[];
+  /** Override the integration's `imagesDir` for this instance. */
+  baseDir?: string;
+  /** CSS aspect ratio for the stage, e.g. `"16 / 9"`. Default `"16 / 10"`. */
+  aspectRatio?: string;
+  /** Corner radius of the stage. Default `"24px"`. */
+  radius?: string;
+  /**
+   * How each photo fills the stage. `"cover"` crops to full-bleed; `"contain"`
+   * shows the whole frame and fills the letterbox with a blurred copy of it —
+   * worth it when the set mixes portrait and landscape.
+   */
+  fit?: 'cover' | 'contain';
+  /** When the glass caption shows. Default `"hover"`. */
+  captionMode?: 'hover' | 'always' | 'none';
+  /** Advance on a timer. Default `false` — never starts under reduced motion. */
+  autoplay?: boolean;
+  /** Autoplay delay in ms (min 1500). Default `6000`. */
+  interval?: number;
+  /** Wrap past the ends. Default `true`. */
+  loop?: boolean;
+  /** Render the dot indicators. Default `true`. */
+  dots?: boolean;
+  /** Show capture date / place under the caption. Default `true`. */
+  showMeta?: boolean;
+  /** Reverse-geocode a place name. Defaults to the integration setting. */
+  geocode?: boolean;
+  /** First N images load eagerly. Default `1`. */
+  eager?: number;
+  /** Per-file overrides (folder mode), keyed by file name. */
+  alt?: Record<string, string>;
+  captions?: Record<string, string>;
+  titles?: Record<string, string>;
+  /** Album / gallery name — accessible label, fallback alt and JSON-LD. */
+  album?: string;
+  /** Locale for the formatted capture date and the control copy. */
+  locale?: string;
+  /** `<img sizes>` attribute. Default assumes a full-width stage. */
+  sizes?: string;
+  /** Emit `ImageGallery` JSON-LD. Defaults to the integration setting. */
+  structuredData?: boolean;
+  labels?: SlideshowLabelOptions;
+}
+
+const {
+  folderPath,
+  images,
+  baseDir = config.imagesDir,
+  aspectRatio = '16 / 10',
+  radius = '24px',
+  fit = 'cover',
+  captionMode = 'hover',
+  autoplay = false,
+  interval = 6000,
+  loop = true,
+  dots = true,
+  showMeta = true,
+  geocode: geocodeProp,
+  eager = 1,
+  alt: altMap = {},
+  captions = {},
+  titles = {},
+  album,
+  locale = config.locale,
+  sizes = '(min-width: 1280px) 1200px, 100vw',
+  structuredData = config.structuredData,
+  labels = {},
+} = Astro.props;
+
+const geocodeEnabled = (geocodeProp ?? config.geocode.enabled) && showMeta;
+
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/**/*.{jpg,jpeg,png,webp,avif,gif,tiff,JPG,JPEG,PNG,WEBP,AVIF,GIF,TIFF}',
+  { eager: true },
+);
+
+interface Slide {
+  src: string;
+  srcset: string;
+  width: number;
+  height: number;
+  alt: string;
+  title: string;
+  caption: string;
+  meta: string;
+}
+
+const widths = config.responsiveWidths;
+const format = config.imageFormat;
+const geocoder = geocodeEnabled ? createGeocoder(config.geocode) : null;
+let slides: Slide[] = [];
+
+if (folderPath) {
+  const target = resolveFolder(baseDir, folderPath);
+  const matched = selectFolderEntries(allImages, target);
+  const cwd = process.cwd();
+
+  // Sequential: the geocoder rate-limits itself anyway.
+  let i = 0;
+  for (const [key, mod] of matched) {
+    i += 1;
+    const meta = mod.default;
+    const file = basename(key);
+
+    let exif: Awaited<ReturnType<typeof readPhotoMeta>> | null = null;
+    try {
+      exif = await readPhotoMeta(await readFile(toAbsolute(key, cwd)));
+    } catch {
+      /* unreadable — the slide still renders, just without EXIF facts */
+    }
+
+    const responsive = await responsiveImage(meta, { widths, format });
+    const resolvedAlt = resolveAlt({
+      file,
+      explicit: altMap[file],
+      description: exif?.description ?? null,
+      album,
+      index: i,
+    });
+
+    const place =
+      geocoder && exif?.latitude != null && exif.longitude != null
+        ? (await geocoder.reverseGeocode(exif.latitude, exif.longitude)).label
+        : '';
+    const date =
+      showMeta && exif?.date
+        ? exif.date.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+        : '';
+
+    slides.push({
+      src: responsive.src,
+      srcset: responsive.srcset,
+      width: responsive.width,
+      height: responsive.height,
+      alt: resolvedAlt,
+      title: titles[file] ?? exif?.title ?? '',
+      caption:
+        captions[file] ??
+        (exif?.description && exif.description !== resolvedAlt ? exif.description : ''),
+      meta: [place, date].filter(Boolean).join(' · '),
+    });
+  }
+} else if (images?.length) {
+  slides = await Promise.all(
+    images.map(async ({ src, alt = '', title = '', caption = '' }, i): Promise<Slide> => {
+      const base = {
+        alt: alt || resolveAlt({ file: `photo-${i + 1}`, album, index: i + 1 }),
+        title,
+        caption,
+        meta: '',
+      };
+      if (typeof src === 'string') {
+        return { ...base, src, srcset: '', width: 0, height: 0 };
+      }
+      const responsive = await responsiveImage(src, { widths, format });
+      return {
+        ...base,
+        src: responsive.src,
+        srcset: responsive.srcset,
+        width: responsive.width,
+        height: responsive.height,
+      };
+    }),
+  );
+}
+
+geocoder?.flush();
+
+const label = album ? `${album} slideshow` : 'Image slideshow';
+const multi = slides.length > 1;
+
+const text = {
+  previous: pickText(labels.previous, locale, 'Previous slide'),
+  next: pickText(labels.next, locale, 'Next slide'),
+  play: pickText(labels.play, locale, 'Play or pause the slideshow'),
+  goToSlide: pickText(labels.goToSlide, locale, 'Go to slide {n}'),
+};
+
+const jsonLd =
+  structuredData && slides.length > 0
+    ? imageGalleryJsonLd(
+        slides.map((s): LdImage => ({
+          contentUrl: s.src,
+          name: s.title || s.alt,
+          caption: s.caption || undefined,
+          width: s.width || undefined,
+          height: s.height || undefined,
+        })),
+        { name: album ?? undefined, siteUrl: Astro.site },
+      )
+    : '';
+
+const style = [
+  `--asg-slides-ar:${aspectRatio}`,
+  `--asg-slides-radius:${radius}`,
+  captionMode === 'none' ? null : null,
+]
+  .filter(Boolean)
+  .join(';');
+---
+
+{
+  slides.length > 0 && (
+    <>
+      <section
+        class:list={['asg-slides', `asg-slides--caption-${captionMode}`, `asg-slides--fit-${fit}`]}
+        aria-roledescription="carousel"
+        aria-label={label}
+        style={style}
+        data-asg-autoplay={autoplay ? 'true' : 'false'}
+        data-asg-interval={String(interval)}
+        data-asg-loop={loop ? 'true' : 'false'}
+        tabindex="0"
+      >
+        <div class="asg-slides__viewport">
+          <div class="asg-slides__track">
+            {slides.map((s, i) => (
+              <figure
+                class:list={['asg-slides__slide', i === 0 && 'is-current']}
+                role="group"
+                aria-roledescription="slide"
+                aria-label={`${i + 1} of ${slides.length}`}
+              >
+                {fit === 'contain' && (
+                  <span
+                    class="asg-slides__fill"
+                    aria-hidden="true"
+                    style={`background-image:url("${s.src}")`}
+                  />
+                )}
+                <img
+                  class="asg-slides__img"
+                  src={s.src}
+                  srcset={s.srcset || undefined}
+                  sizes={s.srcset ? sizes : undefined}
+                  width={s.width || undefined}
+                  height={s.height || undefined}
+                  alt={s.alt}
+                  loading={i < eager ? 'eager' : 'lazy'}
+                  fetchpriority={i < eager ? 'high' : 'auto'}
+                  decoding="async"
+                  draggable="false"
+                />
+                {captionMode !== 'none' && (s.title || s.caption || s.meta) && (
+                  <figcaption class="asg-slides__caption">
+                    {s.meta && <p class="asg-slides__meta">{s.meta}</p>}
+                    {s.title && <p class="asg-slides__title">{s.title}</p>}
+                    {s.caption && <p class="asg-slides__text">{s.caption}</p>}
+                  </figcaption>
+                )}
+              </figure>
+            ))}
+          </div>
+
+          {multi && (
+            <>
+              <button
+                class="asg-slides__nav asg-slides__nav--prev"
+                type="button"
+                aria-label={text.previous}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M15 5l-7 7 7 7" />
+                </svg>
+              </button>
+              <button
+                class="asg-slides__nav asg-slides__nav--next"
+                type="button"
+                aria-label={text.next}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+
+          {multi && autoplay && (
+            <button
+              class="asg-slides__play"
+              type="button"
+              aria-label={text.play}
+              aria-pressed="false"
+            >
+              <svg
+                class="asg-slides__icon-play"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M8 5.5v13l11-6.5z" />
+              </svg>
+              <svg
+                class="asg-slides__icon-pause"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {multi && dots && (
+          <div class="asg-slides__dots" role="tablist" aria-label={label}>
+            {slides.map((_, i) => (
+              <button
+                class="asg-slides__dot"
+                type="button"
+                role="tab"
+                aria-current={i === 0 ? 'true' : 'false'}
+                aria-label={text.goToSlide.replace('{n}', String(i + 1))}
+              />
+            ))}
+          </div>
+        )}
+
+        <p class="asg-slides__status" aria-live="polite" aria-atomic="true" />
+      </section>
+      {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
+    </>
+  )
+}
+
+<script>
+  import { initSlideshows } from '../internal/slideshow.js';
+  initSlideshows();
+</script>
