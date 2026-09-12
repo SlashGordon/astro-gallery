@@ -1,0 +1,299 @@
+---
+/**
+ * A fanned stack of prints: the current photo sits full-size at the centre,
+ * its neighbours peek at the edges — scaled down, dimmed and tilted in
+ * perspective by how far they sit from the centre. Click a peeking print (or
+ * drag, or use the arrows) to bring it forward.
+ *
+ * Unlike `<SlideshowGallery />`'s full-bleed single frame with a glass card
+ * riding over the photo, the caption here lives in its own docked strip below
+ * the stage and crossfades as the centre print changes — text never sits on
+ * top of the image.
+ */
+import type { ImageMetadata } from 'astro';
+import config from 'virtual:astro-gallery/config';
+import { resolveAlt } from '../internal/alt.js';
+import { responsiveImage } from '../internal/images.js';
+import { basename, resolveFolder, selectFolderEntries } from '../internal/paths.js';
+import { imageGalleryJsonLd, type LdImage } from '../internal/structured-data.js';
+import { pickText, type MaybeLocalized } from '../internal/i18n.js';
+import '../styles/gallery.css';
+
+type ImageInput = {
+  /** An `import`ed image, a `/public` path or a remote URL. */
+  src: string | ImageMetadata;
+  alt?: string;
+  title?: string;
+  caption?: string;
+};
+
+/** Control copy. Each entry is a string or a per-locale dictionary. */
+export interface CarouselLabelOptions {
+  previous?: MaybeLocalized;
+  next?: MaybeLocalized;
+  /** `"{n}"` is replaced with the photo number. */
+  goToSlide?: MaybeLocalized;
+}
+
+interface Props {
+  /** Folder relative to `src/<imagesDir>/` — every image inside is used, sorted by name. */
+  folderPath?: string;
+  /** Explicit images. Use this or `folderPath`, not both. */
+  images?: ImageInput[];
+  /** Override the integration's `imagesDir` for this instance. */
+  baseDir?: string;
+  /** CSS aspect ratio for each print, e.g. `"1 / 1"`. Default `"4 / 5"`. */
+  cardAspectRatio?: string;
+  /** Wrap past the ends. Default `true`. */
+  loop?: boolean;
+  /** Advance on a timer. Default `false` — never starts under reduced motion. */
+  autoplay?: boolean;
+  /** Autoplay delay in ms (min 1500). Default `5000`. */
+  interval?: number;
+  /** Render the dot indicators. Default `true`. */
+  dots?: boolean;
+  /** First N photos load eagerly. Default `1`. */
+  eager?: number;
+  /** Per-file alt overrides (folder mode), keyed by file name. */
+  alt?: Record<string, string>;
+  /** Per-file caption overrides (folder mode), keyed by file name. */
+  captions?: Record<string, string>;
+  /** Per-file title overrides (folder mode), keyed by file name. */
+  titles?: Record<string, string>;
+  /** Album / gallery name — accessible label, fallback alt and JSON-LD. */
+  album?: string;
+  /** Locale for the control copy. */
+  locale?: string;
+  /** `<img sizes>` attribute. Defaults to the card's own width. */
+  sizes?: string;
+  /** Emit `ImageGallery` JSON-LD. Defaults to the integration setting. */
+  structuredData?: boolean;
+  labels?: CarouselLabelOptions;
+}
+
+const {
+  folderPath,
+  images,
+  baseDir = config.imagesDir,
+  cardAspectRatio = '4 / 5',
+  loop = true,
+  autoplay = false,
+  interval = 5000,
+  dots = true,
+  eager = 1,
+  alt: altMap = {},
+  captions = {},
+  titles = {},
+  album,
+  locale = config.locale,
+  sizes = '(min-width: 1024px) 42vw, (min-width: 640px) 58vw, 78vw',
+  structuredData = config.structuredData,
+  labels = {},
+} = Astro.props;
+
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/**/*.{jpg,jpeg,png,webp,avif,gif,tiff,JPG,JPEG,PNG,WEBP,AVIF,GIF,TIFF}',
+  { eager: true },
+);
+
+interface Card {
+  src: string;
+  srcset: string;
+  width: number;
+  height: number;
+  alt: string;
+  title: string;
+  caption: string;
+}
+
+const widths = config.responsiveWidths;
+const format = config.imageFormat;
+let cards: Card[] = [];
+
+if (folderPath) {
+  const target = resolveFolder(baseDir, folderPath);
+  const matched = selectFolderEntries(allImages, target);
+  cards = await Promise.all(
+    matched.map(async ([key, mod], i): Promise<Card> => {
+      const file = basename(key);
+      const responsive = await responsiveImage(mod.default, { widths, format });
+      return {
+        src: responsive.src,
+        srcset: responsive.srcset,
+        width: responsive.width,
+        height: responsive.height,
+        alt: resolveAlt({ file, explicit: altMap[file], album, index: i + 1 }),
+        title: titles[file] ?? '',
+        caption: captions[file] ?? '',
+      };
+    }),
+  );
+} else if (images?.length) {
+  cards = await Promise.all(
+    images.map(async ({ src, alt = '', title = '', caption = '' }, i): Promise<Card> => {
+      const base = {
+        alt: alt || resolveAlt({ file: `photo-${i + 1}`, album, index: i + 1 }),
+        title,
+        caption,
+      };
+      if (typeof src === 'string') {
+        return { ...base, src, srcset: '', width: 0, height: 0 };
+      }
+      const responsive = await responsiveImage(src, { widths, format });
+      return {
+        ...base,
+        src: responsive.src,
+        srcset: responsive.srcset,
+        width: responsive.width,
+        height: responsive.height,
+      };
+    }),
+  );
+}
+
+const label = album ? `${album} carousel` : 'Image carousel';
+const multi = cards.length > 1;
+const hasCaptions = cards.some((c) => c.title || c.caption);
+
+const text = {
+  previous: pickText(labels.previous, locale, 'Previous photo'),
+  next: pickText(labels.next, locale, 'Next photo'),
+  goToSlide: pickText(labels.goToSlide, locale, 'Go to photo {n}'),
+};
+
+const jsonLd =
+  structuredData && cards.length > 0
+    ? imageGalleryJsonLd(
+        cards.map((c): LdImage => ({
+          contentUrl: c.src,
+          name: c.title || c.alt,
+          caption: c.caption || undefined,
+          width: c.width || undefined,
+          height: c.height || undefined,
+        })),
+        { name: album ?? undefined, siteUrl: Astro.site },
+      )
+    : '';
+
+const style = `--asg-car-ar:${cardAspectRatio}`;
+---
+
+{
+  cards.length > 0 && (
+    <>
+      <section
+        class="asg-carousel"
+        aria-roledescription="carousel"
+        aria-label={label}
+        style={style}
+        data-asg-autoplay={autoplay ? 'true' : 'false'}
+        data-asg-interval={String(interval)}
+        data-asg-loop={loop ? 'true' : 'false'}
+        tabindex="0"
+      >
+        <div class="asg-carousel__viewport">
+          <div class="asg-carousel__track">
+            {cards.map((c, i) => (
+              <figure
+                class:list={['asg-carousel__card', i === 0 && 'is-current']}
+                role="group"
+                aria-roledescription="slide"
+                aria-label={`${i + 1} of ${cards.length}`}
+              >
+                <div class="asg-carousel__frame">
+                  <img
+                    src={c.src}
+                    srcset={c.srcset || undefined}
+                    sizes={c.srcset ? sizes : undefined}
+                    width={c.width || undefined}
+                    height={c.height || undefined}
+                    alt={c.alt}
+                    loading={i < eager ? 'eager' : 'lazy'}
+                    fetchpriority={i < eager ? 'high' : 'auto'}
+                    decoding="async"
+                    draggable="false"
+                  />
+                </div>
+              </figure>
+            ))}
+          </div>
+
+          {multi && (
+            <>
+              <button
+                class="asg-carousel__nav asg-carousel__nav--prev"
+                type="button"
+                aria-label={text.previous}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M15 5l-7 7 7 7" />
+                </svg>
+              </button>
+              <button
+                class="asg-carousel__nav asg-carousel__nav--next"
+                type="button"
+                aria-label={text.next}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+        </div>
+
+        {hasCaptions && (
+          <div class="asg-carousel__caption-dock">
+            {cards.map(
+              (c, i) =>
+                (c.title || c.caption) && (
+                  <figcaption class="asg-carousel__caption" hidden={i !== 0}>
+                    {c.title && <p class="asg-carousel__title">{c.title}</p>}
+                    {c.caption && <p class="asg-carousel__text">{c.caption}</p>}
+                  </figcaption>
+                ),
+            )}
+          </div>
+        )}
+
+        {multi && dots && (
+          <div class="asg-carousel__dots" role="tablist" aria-label={label}>
+            {cards.map((_, i) => (
+              <button
+                class="asg-carousel__dot"
+                type="button"
+                role="tab"
+                aria-current={i === 0 ? 'true' : 'false'}
+                aria-label={text.goToSlide.replace('{n}', String(i + 1))}
+              />
+            ))}
+          </div>
+        )}
+
+        <p class="asg-carousel__status" aria-live="polite" aria-atomic="true" />
+      </section>
+      {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
+    </>
+  )
+}
+
+<script>
+  import { initCarousels } from '../internal/carousel.js';
+  initCarousels();
+</script>

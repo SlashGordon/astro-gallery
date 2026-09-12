@@ -16,6 +16,28 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`<CarouselGallery />`** — a fanned stack of prints: the centre photo full
+  size, neighbours peeking at the edges, scaled down, dimmed and tilted in
+  perspective by their distance from the centre. Click a peeking print, drag,
+  or use the arrows to bring it forward; the caption docks in its own strip
+  below the stage and crossfades as the centre print changes, rather than
+  riding on the photo the way `SlideshowGallery`'s glass card does. Every card
+  is positioned from its *wrapped* distance to the centre rather than DOM
+  order, so `loop` fans correctly at both ends. Arrow / `Home` / `End` keys,
+  dot indicators, optional autoplay with reduced-motion opt-out, a polite live
+  region, and `folderPath` / `images` / `alt` / `captions` / `titles` /
+  `labels` following the same conventions as the other galleries.
+
+- **`<ImageGallery />` — `variant="masonry"`** keeps each photo's own aspect
+  ratio instead of cropping every cell to a uniform rectangle, packing the
+  columns tight with CSS Grid row-spans (`grid-auto-flow: dense` to backfill
+  gaps, no JS layout pass). The caption moves to a hover scrim riding on the
+  image in this variant, since there's no uniform cell for a `<figcaption>`.
+  The default grid also gained a one-pass scroll-triggered entrance (skipped
+  under `prefers-reduced-motion`), a stronger hover/focus lift, and a zoom-in
+  affordance icon — a clearer cue than `cursor: zoom-in` alone, and one that
+  shows up on keyboard focus too.
+
 - **`<SlideshowGallery />`** — one photo at a time on a track driven by a single
   `translate3d()` (never widths or margins), eased on a `cubic-bezier(0.16, 1, 0.3, 1)`
   expo-out curve. The caption is a glassmorphism card inset from the 24px stage

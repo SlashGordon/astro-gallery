@@ -90,7 +90,11 @@ await page.waitForFunction(
 await page.waitForTimeout(1200);
 
 const named = [];
-async function shot(name, target, { settle = 600, full = false, trim = false } = {}) {
+async function shot(
+  name,
+  target,
+  { settle = 600, full = false, trim = false, maxHeight = 0 } = {},
+) {
   const el = typeof target === 'string' ? page.locator(target).first() : target;
   if (!full) {
     await el.scrollIntoViewIfNeeded();
@@ -110,14 +114,17 @@ async function shot(name, target, { settle = 600, full = false, trim = false } =
   const path = join(RAW, `${name}.png`);
   if (full) await page.screenshot({ path });
   else await el.screenshot({ path });
-  named.push({ name, trim });
+  named.push({ name, trim, maxHeight });
   console.log(`  captured ${name}`);
 }
 
 console.log('capturing:');
 
 await shot('justified-gallery', '.asg-jgallery:not(.asg-egallery)');
-await shot('image-gallery', '.asg-gallery');
+await shot('image-gallery', '.asg-gallery--grid');
+// The masonry columns run on for all thirteen photos — a README image only
+// needs enough of it to show the packing, not the full scroll.
+await shot('image-gallery-masonry', '.asg-gallery--masonry', { maxHeight: 1700 });
 
 // Editorial: the grid is the justified layout, so only the reader is worth a shot.
 await page.locator('.asg-egallery .asg-eg-item').first().click();
@@ -132,6 +139,11 @@ await slides.scrollIntoViewIfNeeded();
 await page.waitForTimeout(800);
 await slides.locator('.asg-slides__slide.is-current').hover();
 await shot('slideshow-gallery', slides, { settle: 900 });
+
+// Carousel: the fanned stack with a neighbour peeking on each side.
+const carousel = page.locator('.asg-carousel').first();
+await carousel.scrollIntoViewIfNeeded();
+await shot('carousel-gallery', carousel, { settle: 900 });
 
 // The timeline reserves rail height for its tallest day, so trim the slack.
 await shot('image-timeline', page.locator('.asg-timeline--horizontal').first(), { trim: true });
@@ -158,13 +170,16 @@ server?.kill();
 
 // --- downscale + encode ----------------------------------------------------
 console.log('\nencoding:');
-for (const { name, trim } of named) {
+for (const { name, trim, maxHeight } of named) {
   execFileSync('magick', [
     join(RAW, `${name}.png`),
     // The timeline reserves rail height for its tallest day; drop the slack.
     ...(trim ? ['-fuzz', '1%', '-trim', '+repage'] : []),
     '-resize',
     `${WIDTH}x>`,
+    // Applied post-resize, so `maxHeight` is a final pixel height, not a
+    // pre-downscale one — crop from the top, not a fit-to-box resize.
+    ...(maxHeight ? ['-gravity', 'North', '-crop', `${WIDTH}x${maxHeight}+0+0`, '+repage'] : []),
     '-strip',
     '-interlace',
     'Plane',

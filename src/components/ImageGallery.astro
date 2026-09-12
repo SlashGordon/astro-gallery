@@ -23,6 +23,12 @@ interface Props {
   baseDir?: string;
   /** Columns on the widest breakpoint. */
   columns?: 1 | 2 | 3 | 4 | 5;
+  /**
+   * `"grid"` crops every cell to the same rectangle. `"masonry"` keeps each
+   * photo's own aspect ratio and packs the columns tight — the caption then
+   * rides on the image as a hover scrim instead of sitting underneath it.
+   */
+  variant?: 'grid' | 'masonry';
   /** CSS gap between items, e.g. `"1.5rem"`. */
   gap?: string;
   /** `loading` attribute for the thumbnails (first image is always eager). */
@@ -46,6 +52,7 @@ const {
   folderPath,
   baseDir = config.imagesDir,
   columns = 3,
+  variant = 'grid',
   gap,
   loading = 'lazy',
   lightbox = true,
@@ -69,6 +76,19 @@ interface Entry {
   caption: string;
   width?: number;
   height?: number;
+}
+
+/**
+ * Row-span for the masonry variant. `grid-auto-rows` ticks in `ROW_UNIT`
+ * slices; a taller (or narrower) photo just claims more of them. `REF_WIDTH`
+ * is a nominal column width — its exact value doesn't matter, only that every
+ * span is computed against the same one, since it cancels out visually.
+ */
+const ROW_UNIT = 8;
+const REF_WIDTH = 400;
+function masonrySpan(width?: number, height?: number): number {
+  if (!width || !height) return 24;
+  return Math.max(6, Math.ceil((REF_WIDTH / (width / height) + 12) / ROW_UNIT));
 }
 
 const widths = config.responsiveWidths;
@@ -150,14 +170,22 @@ const jsonLd =
   entries.length > 0 && (
     <>
       <ul
-        class:list={['asg-gallery', `asg-gallery--cols-${columns}`]}
+        class:list={['asg-gallery', `asg-gallery--cols-${columns}`, `asg-gallery--${variant}`]}
         role="list"
         aria-label={label}
         style={gap ? `--asg-gap:${gap}` : undefined}
         data-asg-lightbox={lightbox ? 'true' : 'false'}
+        data-asg-reveal="true"
       >
         {entries.map((e, i) => (
-          <li class="asg-gallery__cell">
+          <li
+            class="asg-gallery__cell"
+            style={
+              variant === 'masonry'
+                ? `--asg-span:${masonrySpan(e.width, e.height)};--asg-reveal-i:${i}`
+                : `--asg-reveal-i:${i}`
+            }
+          >
             <figure class="asg-gallery__figure">
               <a
                 class="asg-gallery__item asg-lb-item"
@@ -178,8 +206,22 @@ const jsonLd =
                   fetchpriority={i === 0 ? 'high' : 'auto'}
                   decoding="async"
                 />
+                <span class="asg-gallery__zoom" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <circle cx="10.5" cy="10.5" r="6.5" />
+                    <path d="M20 20l-4.7-4.7" stroke-linecap="round" />
+                  </svg>
+                </span>
+                {variant === 'masonry' && e.caption && (
+                  <span class="asg-gallery__scrim" aria-hidden="true" />
+                )}
+                {variant === 'masonry' && e.caption && (
+                  <span class="asg-gallery__label">{e.caption}</span>
+                )}
               </a>
-              {e.caption && <figcaption class="asg-gallery__caption">{e.caption}</figcaption>}
+              {variant === 'grid' && e.caption && (
+                <figcaption class="asg-gallery__caption">{e.caption}</figcaption>
+              )}
             </figure>
           </li>
         ))}
@@ -191,5 +233,40 @@ const jsonLd =
 
 <script>
   import { initLightboxes } from '../internal/lightbox.js';
+
+  /**
+   * One orchestrated entrance per gallery: cells fade and rise into place as
+   * they cross the viewport, staggered by their grid position. Fires once per
+   * element, and never runs at all under `prefers-reduced-motion`.
+   */
+  function initReveal(): void {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const galleries = document.querySelectorAll<HTMLElement>('[data-asg-reveal="true"]');
+    if (galleries.length === 0) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add('is-revealed');
+          io.unobserve(entry.target);
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.1 },
+    );
+
+    galleries.forEach((gallery) => {
+      gallery
+        .querySelectorAll<HTMLElement>('.asg-gallery__cell:not([data-asg-observed])')
+        .forEach((cell) => {
+          cell.dataset.asgObserved = 'true';
+          io.observe(cell);
+        });
+    });
+  }
+
   initLightboxes();
+  initReveal();
+  document.addEventListener('astro:page-load', initReveal);
+  document.addEventListener('astro:after-swap', initReveal);
 </script>

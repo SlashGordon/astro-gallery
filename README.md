@@ -1,12 +1,14 @@
 # astro-gallery
 
-![Best astro gallery for your web project](astro-gallery.png)
+![astro-gallery — a CarouselGallery fan of real holiday photos](astro-gallery.png)
 
 Folder-driven image galleries for [Astro](https://astro.build) — a justified
-layout, a responsive grid, an editorial reader, a glass-caption slideshow, an
-EXIF-date timeline, and a GDPR-friendly photo map. Every image goes through `astro:assets` (optimised, correctly-sized
-`webp`/`avif` with `srcset`), and every component ships semantic HTML, native
-lazy loading, resolved `alt` text and `ImageGallery` JSON-LD out of the box.
+layout, a responsive grid with an optional masonry variant, an editorial
+reader, a glass-caption slideshow, a fanned-print carousel, an EXIF-date
+timeline, and a GDPR-friendly photo map. Every image goes through
+`astro:assets` (optimised, correctly-sized `webp`/`avif` with `srcset`), and
+every component ships semantic HTML, native lazy loading, resolved `alt` text
+and `ImageGallery` JSON-LD out of the box.
 
 Point a component at a folder in `src/`, drop your photos in, done:
 
@@ -15,6 +17,7 @@ Point a component at a folder in `src/`, drop your photos in, done:
 <ImageGallery folderPath="trips/rome" columns={4} />
 <EditorialGallery folderPath="trips/rome" album="Rome, 2024" />
 <SlideshowGallery folderPath="trips/rome" album="Rome, 2024" />
+<CarouselGallery folderPath="trips/rome" album="Rome, 2024" />
 <ImageTimeline folderPath="trips/rome" />
 <MapGallery folderPath="trips/rome" />
 ```
@@ -22,9 +25,10 @@ Point a component at a folder in `src/`, drop your photos in, done:
 | Component          | What it does                                                                                                                                                                                             |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `JustifiedGallery` | Aspect-ratio-aware rows that fill the width edge-to-edge (Flickr/Unsplash style). Responsive `srcset`, blur-up skeletons, `content-visibility`, JSON-LD. Zero layout JS.                                 |
-| `ImageGallery`     | Uniform responsive CSS grid, click to open a lightbox with arrow-key navigation. Also accepts an explicit `images={[…]}` list.                                                                           |
+| `ImageGallery`     | Uniform responsive CSS grid, click to open a lightbox with arrow-key navigation. A scroll-triggered entrance, a zoom-in affordance, and an opt-in `variant="masonry"` that keeps each photo's own ratio. |
 | `EditorialGallery` | The justified layout with a two-pane fullscreen reader: photo left, caption panel right (title, caption, date, camera, place, pixel size), filmstrip, collapsible panel.                                 |
 | `SlideshowGallery` | One photo at a time on a translate-driven track, with a glassmorphism caption card that rises on hover or focus. Pointer drag, keyboard, dots, optional autoplay with a pause control.                   |
+| `CarouselGallery`  | A fanned stack of prints: the centre photo full-size, neighbours peeking in perspective. Click a peek, drag, or use the arrows; the caption docks below the stage instead of riding on the photo.        |
 | `ImageTimeline`    | Reads each photo's EXIF capture date, groups by day and lays the days out on a timeline — a horizontal scrolling rail or a vertical spine (`<ol>` + `<time>`). Optional reverse-geocoded location label. |
 | `MapGallery`       | Reads GPS EXIF, drops a circular photo marker per location on a Leaflet map. Consent gate, so no external tile request happens before the visitor agrees; crawlable fallback.                            |
 
@@ -86,6 +90,7 @@ import JustifiedGallery from 'astro-gallery/components/JustifiedGallery.astro';
 import ImageGallery from 'astro-gallery/components/ImageGallery.astro';
 import EditorialGallery from 'astro-gallery/components/EditorialGallery.astro';
 import SlideshowGallery from 'astro-gallery/components/SlideshowGallery.astro';
+import CarouselGallery from 'astro-gallery/components/CarouselGallery.astro';
 import ImageTimeline from 'astro-gallery/components/ImageTimeline.astro';
 import MapGallery from 'astro-gallery/components/MapGallery.astro';
 ---
@@ -136,12 +141,29 @@ carried through:
 
 ![The built-in lightbox showing a single photo with its caption](docs/screenshots/lightbox.jpg)
 
+Cells rise into place as they cross the viewport (one pass, skipped entirely
+under `prefers-reduced-motion`), and hovering or focusing a photo lifts it,
+scales the image and raises a zoom-in cue — a clearer affordance than
+`cursor: zoom-in` alone, and one that also shows up for keyboard focus.
+
 **Folder mode** — every image in `src/assets/images/trips/rome/`, sorted by
 filename (natural sort, so `2.jpg` before `10.jpg`):
 
 ```astro
 <ImageGallery folderPath="trips/rome" columns={3} />
 ```
+
+**`variant="masonry"`** keeps each photo's own aspect ratio instead of
+cropping every cell to the same rectangle, packing the columns tight
+(CSS Grid row-spans, `grid-auto-flow: dense` to backfill gaps — no JS layout
+pass). The caption moves to a hover scrim riding on the image, since there's
+no uniform cell to put a `<figcaption>` under:
+
+```astro
+<ImageGallery folderPath="trips/rome" columns={4} variant="masonry" />
+```
+
+![ImageGallery variant="masonry" — columns packed tight, each photo keeping its own aspect ratio](docs/screenshots/image-gallery-masonry.jpg)
 
 **Explicit mode** — mix `import`ed images, `/public` paths and remote URLs, and
 add captions:
@@ -167,6 +189,7 @@ import sunrise from '../assets/sunrise.jpg';
 | `images`         | `{ src, alt?, caption? }[]` | –           | Use instead of `folderPath`. `src` is an imported image, a `/public` path or a URL. |
 | `baseDir`        | `string`                    | `imagesDir` | Override the base folder for this instance.                                         |
 | `columns`        | `1 \| 2 \| 3 \| 4 \| 5`     | `3`         | Columns at the widest breakpoint (scales down responsively).                        |
+| `variant`        | `'grid' \| 'masonry'`       | `'grid'`    | `'masonry'` keeps each photo's own ratio instead of cropping to a uniform cell.     |
 | `gap`            | `string`                    | `1rem`      | CSS gap between items.                                                              |
 | `loading`        | `'lazy' \| 'eager'`         | `'lazy'`    | `loading` for images after the first (the first is always `eager`).                 |
 | `lightbox`       | `boolean`                   | `true`      | `false` → thumbnails link straight to the full image.                               |
@@ -310,6 +333,59 @@ Retheme through the custom properties on `.asg-slides`: `--asg-slides-duration`,
 
 Under `prefers-reduced-motion` the track transition, the card's rise and the
 control hover transforms are all dropped, and autoplay never starts.
+
+### `CarouselGallery`
+
+A fanned stack of prints rather than a single full-bleed frame: the centre
+photo sits at full size, its neighbours peek at the edges — scaled down,
+dimmed and tilted in perspective by how far they sit from the centre. Click a
+peeking print, drag, or use the arrows to bring it forward.
+
+The caption docks in its own strip below the stage and crossfades as the
+centre print changes, instead of riding on the photo the way
+`SlideshowGallery`'s glass card does — so it never competes with the image.
+
+![CarouselGallery — a fanned stack of prints with a neighbour peeking on each side](docs/screenshots/carousel-gallery.jpg)
+
+```astro
+<CarouselGallery
+  folderPath="trips/rome"
+  album="Rome, 2024"
+  titles={{ 'piazza-navona.jpg': 'Fountain of the Four Rivers' }}
+  captions={{ 'piazza-navona.jpg': 'Bernini, 1651 — best an hour before sunset.' }}
+/>
+```
+
+Every card is positioned from its own distance to the centre (the _wrapped_
+distance, so with `loop` on, the last photo correctly peeks to the left of the
+first) rather than from DOM order — a shared single track transform, the way
+`SlideshowGallery` centres its one full-bleed slide, can't loop a multi-card
+fan correctly. `←` / `→` / `Home` / `End` work once the carousel has focus, and
+a polite live region announces `"3 of 13"`.
+
+| Prop                          | Type                                | Default             | Notes                                                  |
+| ----------------------------- | ----------------------------------- | ------------------- | ------------------------------------------------------ |
+| `folderPath`                  | `string`                            | –                   | Folder relative to `src/<imagesDir>/`.                 |
+| `images`                      | `{ src, alt?, title?, caption? }[]` | –                   | Use instead of `folderPath`.                           |
+| `cardAspectRatio`             | `string`                            | `"4 / 5"`           | CSS aspect ratio for each print.                       |
+| `loop`                        | `boolean`                           | `true`              | Wrap past the ends.                                    |
+| `autoplay`                    | `boolean`                           | `false`             | Never starts under reduced motion.                     |
+| `interval`                    | `number`                            | `5000`              | Autoplay delay in ms (min 1500).                       |
+| `dots`                        | `boolean`                           | `true`              | Render the dot indicators.                             |
+| `eager`                       | `number`                            | `1`                 | First N photos load eagerly.                           |
+| `alt` / `captions` / `titles` | `Record<string,string>`             | `{}`                | Per-file overrides (folder mode).                      |
+| `album`                       | `string`                            | –                   | Accessible label, fallback `alt`, JSON-LD `name`.      |
+| `locale`                      | `string`                            | integration setting | Resolves `labels`.                                     |
+| `sizes`                       | `string`                            | card's own width    | `<img sizes>` attribute.                               |
+| `structuredData`              | `boolean`                           | integration setting | Emit `ImageGallery` JSON-LD.                           |
+| `labels`                      | `CarouselLabelOptions`              | English             | `previous`, `next`, `goToSlide` (`{n}` is the number). |
+
+Retheme through the custom properties on `.asg-carousel`: `--asg-car-ar`,
+`--asg-car-card-w`, `--asg-car-duration`, `--asg-car-ease` and
+`--asg-car-radius`.
+
+Under `prefers-reduced-motion` the card and nav transitions are dropped
+(navigation is instant) and autoplay never starts.
 
 ### `ImageTimeline`
 
@@ -463,13 +539,17 @@ For a custom `tileUrl`, allow that provider's tile host.
 
 ## Captions
 
-Captions render as a `<figcaption>` (always visible in `ImageGallery`, revealed
-on hover/focus in `JustifiedGallery` and `EditorialGallery`) and also feed the
-lightbox caption and the JSON-LD `caption`. In `EditorialGallery` the caption is
-the panel's body text. Three ways to set them:
+Captions render as a `<figcaption>` — always visible under the photo in
+`ImageGallery`'s default grid, revealed on hover/focus in `JustifiedGallery`,
+`EditorialGallery` and `ImageGallery`'s `variant="masonry"` — and also feed the
+lightbox caption and the JSON-LD `caption`. In `EditorialGallery` the caption
+is the panel's body text; in `SlideshowGallery` it's the glass card that rises
+over the photo; in `CarouselGallery` it's a docked strip below the stage that
+crossfades as the centre print changes. Three ways to set them:
 
 **Folder mode — the `captions` prop** (`JustifiedGallery`, `ImageGallery`,
-`EditorialGallery`). A map of _file name_ → caption; files you omit have none:
+`EditorialGallery`, `SlideshowGallery`, `CarouselGallery`). A map of _file
+name_ → caption; files you omit have none:
 
 ```astro
 <JustifiedGallery
@@ -645,9 +725,9 @@ photo N"`. Name your files well or pass `alt={{ 'file.jpg': '…' }}` and you ge
   (or first `eager` images in `JustifiedGallery`) is `loading="eager"` +
   `fetchpriority="high"` for LCP. `JustifiedGallery` adds `content-visibility`
   so offscreen rows cost nothing.
-- **Responsive images.** `ImageGallery` and `JustifiedGallery` emit a
-  `srcset` across `responsiveWidths` (never upscaling past the source) with a
-  matching `sizes`.
+- **Responsive images.** `ImageGallery`, `JustifiedGallery` and
+  `CarouselGallery` emit a `srcset` across `responsiveWidths` (never upscaling
+  past the source) with a matching `sizes`.
 - **Structured data.** Each gallery emits one
   `<script type="application/ld+json">` with an `ImageGallery` whose
   `associatedMedia` is a list of `ImageObject`s (`contentUrl`, `thumbnailUrl`,
@@ -674,10 +754,13 @@ photo N"`. Name your files well or pass `alt={{ 'file.jpg': '…' }}` and you ge
 - **The lightbox** is ~2 kB of dependency-free JS, re-initialised on
   `astro:page-load` / `astro:after-swap` so it survives View Transitions.
   `EditorialGallery` ships its own viewer instead (~3 kB, same lifecycle), so a
-  page that does not use it never downloads it. `SlideshowGallery` likewise
-  carries its own ~2.5 kB of track/drag logic.
+  page that does not use it never downloads it. `SlideshowGallery` and
+  `CarouselGallery` likewise each carry their own ~2.5–3 kB of track/drag
+  logic, downloaded only by pages that use them.
 - **Leaflet** is imported in a client `<script>`, so the map library is only
   downloaded on pages that actually use `MapGallery` — and only after consent.
+
+There's a walkthrough of the components at [slashgordon.link](https://www.slashgordon.link/post/astro-gallery/); it also runs the photo gallery on [patioplanner.app](https://www.patioplanner.app/).
 
 ---
 
@@ -699,7 +782,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md). There is a runnable playground in
 
 ## License
 
-[MIT](./LICENSE) © SlashGordon
+[MIT](./LICENSE) © [SlashGordon](https://www.slashgordon.link).
 
 ## Support
 

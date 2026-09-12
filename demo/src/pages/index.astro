@@ -3,6 +3,7 @@ import ImageGallery from 'astro-gallery/components/ImageGallery.astro';
 import EditorialGallery from 'astro-gallery/components/EditorialGallery.astro';
 import JustifiedGallery from 'astro-gallery/components/JustifiedGallery.astro';
 import SlideshowGallery from 'astro-gallery/components/SlideshowGallery.astro';
+import CarouselGallery from 'astro-gallery/components/CarouselGallery.astro';
 import ImageTimeline from 'astro-gallery/components/ImageTimeline.astro';
 import MapGallery from 'astro-gallery/components/MapGallery.astro';
 
@@ -112,7 +113,7 @@ const photoTitles = {
       <header>
         <h1>astro-gallery</h1>
         <p>
-          Six folder-driven components, all reading from
+          Seven folder-driven components, all reading from
           <code>src/assets/images/holidays/</code>. These are real holiday snapshots. Most carry
           EXIF (capture date + GPS), so the timeline and the map have something to work with. A few
           are messenger exports with the metadata stripped, so they land in the timeline's
@@ -160,6 +161,24 @@ const photoTitles = {
         captions={{
           '4.jpg': 'A slate-roofed valley town in the Thuringian Forest',
           '6.jpg': 'Lambeth Palace gatehouse, early autumn',
+        }}
+      />
+
+      <p>
+        <code>variant="masonry"</code> keeps every photo's own aspect ratio instead of cropping to a uniform
+        cell, and the caption moves to a hover scrim riding on the image:
+      </p>
+      <ImageGallery
+        folderPath="holidays"
+        columns={4}
+        variant="masonry"
+        album="Holiday snapshots"
+        captions={{
+          '1.jpg': 'The field above the beach',
+          '3.jpg': 'Cliffs, heather, and one impatient dog',
+          '5.jpg': 'The London Eye and County Hall from the Embankment',
+          '7.jpg': 'Tuscany, late August — the track up to the ridge',
+          '12.jpg': 'A swimming lake at the end of June',
         }}
       />
 
@@ -284,6 +303,38 @@ const photoTitles = {
         interval={5000}
         dots={false}
         titles={photoTitles}
+      />
+
+      <h2>&lt;CarouselGallery /&gt;</h2>
+      <p>
+        A fanned stack of prints: the centre photo sits full-size, its neighbours peek at the edges
+        — scaled down, dimmed and tilted in perspective by their distance from the centre. Click a
+        peeking print, drag, or use the arrows to bring it forward. The caption lives in its own
+        strip below the stage and crossfades as the centre print changes, rather than riding on the
+        photo the way <code>SlideshowGallery</code>'s does.
+      </p>
+      <CarouselGallery
+        folderPath="holidays"
+        album="Holiday snapshots"
+        titles={photoTitles}
+        captions={{
+          '1.jpg':
+            'Two weeks without rain had taken the grass down to straw, and the light does this thing in August where it turns the whole field the colour of the sand below it.',
+          '2.jpg': 'The coast path bends inland here and then throws you straight up the hill.',
+          '3.jpg':
+            'Caves cut into the headland below, the heather just going over, and a labrador who had decided some time ago that we were walking too slowly.',
+          '4.jpg': 'Everything here is roofed in the local slate — the walls too, in places.',
+          '5.jpg':
+            'The wheel does not photograph well from underneath, so you cross the river and take it from the Embankment.',
+          '6.jpg': 'The plane tree has been quietly winning its argument for two hundred years.',
+          '7.jpg': 'The track climbs for a good twenty minutes to that house on the ridge.',
+          '8.jpg': 'Flat water, wooden groynes marching away to the right.',
+          '9.jpg': 'Beech does the best autumn of any tree here.',
+          '10.jpg': 'Nothing is flowering, nothing is green except the needles.',
+          '11.jpg': 'They come up in the strip the plough misses, every year.',
+          '12.jpg': 'A swimming lake at the end of June.',
+          '13.jpg': 'The heath flowers all at once and the horizon goes purple for three weeks.',
+        }}
       />
 
       <h2>&lt;ImageTimeline /&gt;</h2>

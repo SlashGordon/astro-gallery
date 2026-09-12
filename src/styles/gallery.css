@@ -113,7 +113,35 @@
   gap: 0.4rem;
 }
 
+.asg-gallery__cell {
+  opacity: 1;
+  transform: none;
+}
+
+/*
+ * Staggered entrance: each cell rises in as it crosses the viewport. Gated on
+ * `no-preference` too — `initReveal()` skips creating the observer under
+ * reduced motion, so `.is-revealed` would otherwise never arrive and the
+ * cells would stay invisible.
+ */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-asg-reveal='true'] .asg-gallery__cell {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 620ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: calc(min(var(--asg-reveal-i, 0), 10) * 55ms);
+  }
+
+  [data-asg-reveal='true'] .asg-gallery__cell.is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .asg-gallery__item {
+  position: relative;
   display: block;
   overflow: hidden;
   border-radius: var(--asg-radius);
@@ -125,12 +153,16 @@
   transition:
     border-color var(--asg-transition) ease,
     box-shadow var(--asg-transition) ease,
-    transform var(--asg-transition) ease;
+    transform var(--asg-transition) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.asg-gallery__item:hover {
+.asg-gallery__item:hover,
+.asg-gallery__item:focus-visible {
   border-color: color-mix(in srgb, var(--asg-accent) 45%, transparent);
-  box-shadow: var(--asg-shadow);
+  box-shadow:
+    0 14px 32px -12px rgba(0, 0, 0, 0.35),
+    var(--asg-shadow);
+  transform: translateY(-3px);
 }
 
 .asg-gallery__item:focus-visible {
@@ -143,17 +175,142 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform var(--asg-transition) ease;
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.asg-gallery__item:hover img {
-  transform: scale(1.04);
+.asg-gallery__item:hover img,
+.asg-gallery__item:focus-visible img {
+  transform: scale(1.06);
 }
 
+/* Quiet zoom-in affordance, centred over the image on hover or focus. */
+.asg-gallery__zoom {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition:
+    opacity var(--asg-transition) ease,
+    background var(--asg-transition) ease;
+}
+
+.asg-gallery__item:hover .asg-gallery__zoom,
+.asg-gallery__item:focus-visible .asg-gallery__zoom {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.asg-gallery__zoom svg {
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0.55rem;
+  box-sizing: content-box;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(16, 16, 18, 0.55);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transform: scale(0.85);
+  transition: transform var(--asg-transition) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.asg-gallery__item:hover .asg-gallery__zoom svg,
+.asg-gallery__item:focus-visible .asg-gallery__zoom svg {
+  transform: scale(1);
+}
+
+/*
+ * A quiet museum-placard treatment rather than plain muted text: a short
+ * hairline tick stands in for the eyebrow label / quote mark a caption would
+ * otherwise reach for, and ties into the print motif the other variants and
+ * `CarouselGallery` already lean on.
+ */
 .asg-gallery__caption {
-  font-size: 0.8rem;
+  position: relative;
+  padding-top: 0.6rem;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
   color: var(--asg-text-muted);
+}
+
+.asg-gallery__caption::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1.35rem;
+  height: 2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--asg-accent) 55%, var(--asg-border));
+}
+
+/* ---------------------------------------------------------- masonry variant -- */
+
+/*
+ * `dense` backfills short columns instead of leaving a gap under every tall
+ * photo — without it the row-major default strands whole columns of empty
+ * space under one early panorama. The trade-off is visual order can drift
+ * from DOM order; acceptable here since a photo grid has no reading sequence.
+ */
+.asg-gallery--masonry {
+  grid-auto-rows: 8px;
+  grid-auto-flow: dense;
+  align-items: stretch;
+}
+
+.asg-gallery--masonry .asg-gallery__cell {
+  grid-row: span var(--asg-span, 24);
+}
+
+.asg-gallery--masonry .asg-gallery__figure {
+  height: 100%;
+}
+
+.asg-gallery--masonry .asg-gallery__item {
+  height: 100%;
+}
+
+.asg-gallery--masonry .asg-gallery__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.28) 40%,
+    rgba(0, 0, 0, 0) 65%
+  );
+  opacity: 0;
+  transition: opacity var(--asg-transition) ease;
+}
+
+.asg-gallery--masonry .asg-gallery__label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 1.75rem 1rem 0.9rem;
+  color: #fff;
+  font-size: 0.82rem;
   line-height: 1.4;
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition:
+    opacity var(--asg-transition) ease,
+    transform var(--asg-transition) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.asg-gallery--masonry .asg-gallery__item:hover .asg-gallery__scrim,
+.asg-gallery--masonry .asg-gallery__item:focus-visible .asg-gallery__scrim,
+.asg-gallery--masonry .asg-gallery__item:hover .asg-gallery__label,
+.asg-gallery--masonry .asg-gallery__item:focus-visible .asg-gallery__label {
+  opacity: 1;
+  transform: none;
 }
 
 /* ------------------------------------------------------- Justified gallery -- */
@@ -495,11 +652,21 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .asg-gallery__item,
   .asg-gallery__item img,
+  .asg-gallery__zoom,
+  .asg-gallery__zoom svg,
+  .asg-gallery__scrim,
+  .asg-gallery__label,
   .asg-timeline__item img,
   .asg-timeline__hint svg {
     transition: none;
     animation: none;
+  }
+
+  .asg-gallery__item:hover,
+  .asg-gallery__item:focus-visible {
+    transform: none;
   }
 }
 
@@ -1829,6 +1996,292 @@
     transform: translateY(-50%);
   }
   .asg-slides.is-cutting .asg-slides__slide.is-current {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------- Carousel -- */
+
+/*
+ * A fanned stack of prints. Every card is positioned independently from its
+ * signed distance to the centre card (JS resolves the *wrapped* distance —
+ * short way round — so end cards peek too when looping): `--asg-car-x` places
+ * it, `--asg-car-scale` / `--asg-car-opacity` / `--asg-car-rotate` shrink, dim
+ * and tilt it. Four numbers per frame per card, rather than a state per card.
+ * A shared single transform on the track (as `SlideshowGallery` uses) can't
+ * loop correctly here, since a wrapped neighbour's natural DOM position is
+ * nowhere near its peek slot.
+ */
+.asg-carousel {
+  --asg-car-ar: 4 / 5;
+  --asg-car-card-w: 76%;
+  --asg-car-duration: 560ms;
+  --asg-car-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --asg-car-radius: 14px;
+
+  position: relative;
+  margin: 2.75rem 0;
+  outline: none;
+}
+
+@media (min-width: 640px) {
+  .asg-carousel {
+    --asg-car-card-w: 56%;
+  }
+}
+@media (min-width: 1024px) {
+  .asg-carousel {
+    --asg-car-card-w: 40%;
+  }
+}
+
+.asg-carousel:focus-visible {
+  outline: 2px solid var(--asg-accent);
+  outline-offset: 8px;
+  border-radius: calc(var(--asg-car-radius) + 6px);
+}
+
+.asg-carousel__viewport {
+  position: relative;
+  overflow: hidden;
+  padding: 2.75rem 0 0.5rem;
+  perspective: 1400px;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.asg-carousel__viewport:active {
+  cursor: grabbing;
+}
+
+/*
+ * Positioned so each card can resolve its `width: var(--asg-car-card-w)`
+ * percentage against it. Height is set from JS (`track.style.height`) each
+ * paint: with every card taken out of flow by `position: absolute`, the
+ * track has no normal-flow content left to size itself from.
+ */
+.asg-carousel__track {
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.asg-carousel__card {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--asg-car-card-w);
+  margin: 0;
+  /*
+   * `translateX(-50%)` centres the card on the track's midpoint (a percentage
+   * translate resolves against the element's own box); `--asg-car-x` then
+   * carries it out to its slot — `d * pitch`, plus any live drag offset.
+   */
+  transform: translateX(-50%) translateX(var(--asg-car-x, 0px)) scale(var(--asg-car-scale, 1))
+    rotateY(var(--asg-car-rotate, 0deg));
+  opacity: var(--asg-car-opacity, 1);
+  transition:
+    transform var(--asg-car-duration) var(--asg-car-ease),
+    opacity var(--asg-car-duration) var(--asg-car-ease);
+}
+
+.asg-carousel.is-dragging .asg-carousel__card {
+  transition: none;
+}
+
+.asg-carousel__card:not(.is-current) {
+  cursor: pointer;
+}
+
+.asg-carousel__frame {
+  aspect-ratio: var(--asg-car-ar);
+  overflow: hidden;
+  border-radius: var(--asg-car-radius);
+  background: var(--asg-surface-2);
+  box-shadow: 0 22px 45px -18px rgba(0, 0, 0, 0.55);
+}
+
+.asg-carousel__card.is-current .asg-carousel__frame {
+  box-shadow: 0 30px 60px -16px rgba(0, 0, 0, 0.5);
+}
+
+.asg-carousel__card img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* ------------------------------------------------------------------ nav --- */
+
+.asg-carousel__nav {
+  position: absolute;
+  z-index: 50;
+  top: calc(50% + 1.1rem);
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--asg-border);
+  border-radius: 999px;
+  background: var(--asg-surface);
+  color: var(--asg-text);
+  box-shadow: var(--asg-shadow);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    background var(--asg-transition) ease,
+    transform var(--asg-transition) ease,
+    opacity var(--asg-transition) ease;
+}
+
+.asg-carousel__nav:hover {
+  background: var(--asg-surface-2);
+  transform: translateY(-50%) scale(1.07);
+}
+
+.asg-carousel__nav:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.asg-carousel__nav:focus-visible {
+  outline: 2px solid var(--asg-accent);
+  outline-offset: 3px;
+}
+
+.asg-carousel__nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+  transform: translateY(-50%);
+}
+
+.asg-carousel__nav svg {
+  width: 55%;
+  height: 55%;
+}
+
+.asg-carousel__nav--prev {
+  left: clamp(0.25rem, 4%, 1.5rem);
+}
+.asg-carousel__nav--next {
+  right: clamp(0.25rem, 4%, 1.5rem);
+}
+
+/* -------------------------------------------------------------- caption --- */
+
+/*
+ * Docked below the stage rather than floating over it — text never competes
+ * with the photo. All captions render for no-JS / crawlers; only the first is
+ * visible until the script decides otherwise via `hidden`.
+ */
+.asg-carousel__caption-dock {
+  position: relative;
+  max-width: 46rem;
+  margin: 1.35rem auto 0;
+  padding: 0 0.5rem;
+  text-align: center;
+  min-height: 1.6em;
+}
+
+.asg-carousel__caption {
+  margin: 0;
+  animation: asg-car-caption-in 420ms var(--asg-car-ease);
+}
+
+.asg-carousel__caption[hidden] {
+  display: none !important;
+}
+
+@keyframes asg-car-caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.asg-carousel__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--asg-text);
+}
+
+.asg-carousel__text {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--asg-text-muted);
+  text-wrap: pretty;
+}
+
+/* ------------------------------------------------------------------ dots -- */
+
+.asg-carousel__dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1.1rem;
+}
+
+.asg-carousel__dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--asg-text-muted);
+  opacity: 0.4;
+  cursor: pointer;
+  transition:
+    width 420ms var(--asg-car-ease),
+    opacity 260ms ease,
+    background 260ms ease;
+}
+
+.asg-carousel__dot:hover {
+  opacity: 0.75;
+}
+
+.asg-carousel__dot:focus-visible {
+  outline: 2px solid var(--asg-accent);
+  outline-offset: 3px;
+}
+
+.asg-carousel__dot[aria-current='true'] {
+  width: 24px;
+  opacity: 1;
+  background: var(--asg-accent);
+}
+
+.asg-carousel__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asg-carousel__track,
+  .asg-carousel__card,
+  .asg-carousel__nav {
+    transition: none;
+  }
+  .asg-carousel__nav:hover {
+    transform: translateY(-50%);
+  }
+  .asg-carousel__caption {
     animation: none;
   }
 }
