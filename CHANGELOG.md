@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.com/SlashGordon/astro-gallery/compare/v1.1.0...v1.2.0) (2026-09-12)
+
+
+### Features
+
+* added CaeouselGallery and improved ImageGallery ([7981b6e](https://github.com/SlashGordon/astro-gallery/commit/7981b6ebb76c0f8cac152fbeb39c39e63887b17d))
+
 ## [1.1.0](https://github.com/SlashGordon/astro-gallery/compare/v1.0.4...v1.1.0) (2026-09-09)
 
 
