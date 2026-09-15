@@ -64,13 +64,21 @@
 
 /* ------------------------------------------------------------ Grid gallery -- */
 
+/*
+ * Host content styles frequently target bare `<ul>` too — Tailwind Typography's
+ * `.prose ul` and hand-rolled blog stylesheets alike set `list-style: disc` and
+ * `padding-left` on every `ul`, a single-class selector like `.asg-gallery`
+ * loses that specificity fight when the host rule is `.prose ul` / `.blog-body
+ * ul` (class + type beats class alone), and every photo grows a bullet.
+ * Same fix as the `img` reset above: neutralise regardless of load order.
+ */
 .asg-gallery {
   display: grid;
   gap: var(--asg-gap);
   grid-template-columns: repeat(var(--asg-cols, 3), minmax(0, 1fr));
-  margin: 2rem 0;
-  padding: 0;
-  list-style: none;
+  margin: 2rem 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
 }
 
 .asg-gallery__cell {
@@ -315,14 +323,15 @@
 
 /* ------------------------------------------------------- Justified gallery -- */
 
+/* Same host-`ul`-collision reset as `.asg-gallery` above. */
 .asg-jgallery {
   --asg-row-h: 260px;
   display: flex;
   flex-wrap: wrap;
   gap: var(--asg-gap);
-  margin: 2rem 0;
-  padding: 0;
-  list-style: none;
+  margin: 2rem 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
 }
 
 .asg-jgallery__cell {
@@ -480,13 +489,14 @@
   );
 }
 
+/* Same host-`ul`-collision reset as `.asg-gallery` above. */
 .asg-timeline__groups {
   display: flex;
   align-items: flex-start;
   gap: 1.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
 }
 
 .asg-timeline__group {
@@ -802,13 +812,14 @@
  * Crawlable / no-JS fallback: a scrollable thumbnail grid filling the map box.
  * Removed by the client script once the interactive map is built.
  */
+/* Same host-`ul`-collision reset as `.asg-gallery` above. */
 .asg-map__fallback {
   position: absolute;
   inset: 0;
   z-index: 1;
-  margin: 0;
-  padding: 0.75rem;
-  list-style: none;
+  margin: 0 !important;
+  padding: 0.75rem !important;
+  list-style: none !important;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   grid-auto-rows: min-content;
