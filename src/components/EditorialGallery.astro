@@ -267,63 +267,61 @@ const jsonLd =
     : '';
 ---
 
-{
-  items.length > 0 && (
-    <>
-      <ul
-        class="asg-jgallery asg-egallery"
-        role="list"
-        aria-label={label}
-        data-asg-eglb
-        data-asg-eglb-labels={JSON.stringify(panelLabels)}
-        style={`--asg-row-h:${rowHeight}px;${gap ? `--asg-gap:${gap};` : ''}`}
-      >
-        {items.map((it, i) => (
-          <li class="asg-jgallery__cell" style={`--asg-ar:${it.aspectRatio.toFixed(4)}`}>
-            <figure class="asg-jgallery__figure">
-              <a
-                class="asg-jgallery__item asg-eg-item"
-                href={it.fullSrc}
-                data-asg-full={it.fullSrc}
-                data-asg-thumb={it.thumbSrc}
-                data-asg-alt={it.alt}
-                data-asg-title={it.title}
-                data-asg-caption={it.caption}
-                data-asg-date={it.date}
-                data-asg-location={it.location}
-                data-asg-camera={it.camera}
-                data-asg-dimensions={it.dimensions}
-                aria-label={it.title || it.caption || it.alt}
-              >
-                <img
-                  src={it.src}
-                  srcset={it.srcset || undefined}
-                  sizes={it.srcset ? sizes : undefined}
-                  width={it.width || undefined}
-                  height={it.height || undefined}
-                  alt={it.alt}
-                  loading={i < eager ? 'eager' : 'lazy'}
-                  fetchpriority={i < eager ? 'high' : 'auto'}
-                  decoding="async"
-                />
-                {(it.title || it.caption) && (
-                  <>
-                    <span class="asg-egallery__scrim" aria-hidden="true" />
-                    <span class="asg-egallery__label" aria-hidden="true">
-                      {it.title && <strong>{it.title}</strong>}
-                      {it.caption && <span>{it.caption}</span>}
-                    </span>
-                  </>
-                )}
-              </a>
-            </figure>
-          </li>
-        ))}
-      </ul>
-      {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
-    </>
-  )
-}
+{items.length > 0 && (
+  <>
+    <ul
+      class="asg-jgallery asg-egallery"
+      role="list"
+      aria-label={label}
+      data-asg-eglb
+      data-asg-eglb-labels={JSON.stringify(panelLabels)}
+      style={`--asg-row-h:${rowHeight}px;${gap ? `--asg-gap:${gap};` : ''}`}
+    >
+      {items.map((it, i) => (
+        <li class="asg-jgallery__cell" style={`--asg-ar:${it.aspectRatio.toFixed(4)}`}>
+          <figure class="asg-jgallery__figure">
+            <a
+              class="asg-jgallery__item asg-eg-item"
+              href={it.fullSrc}
+              data-asg-full={it.fullSrc}
+              data-asg-thumb={it.thumbSrc}
+              data-asg-alt={it.alt}
+              data-asg-title={it.title}
+              data-asg-caption={it.caption}
+              data-asg-date={it.date}
+              data-asg-location={it.location}
+              data-asg-camera={it.camera}
+              data-asg-dimensions={it.dimensions}
+              aria-label={it.title || it.caption || it.alt}
+            >
+              <img
+                src={it.src}
+                srcset={it.srcset || undefined}
+                sizes={it.srcset ? sizes : undefined}
+                width={it.width || undefined}
+                height={it.height || undefined}
+                alt={it.alt}
+                loading={i < eager ? 'eager' : 'lazy'}
+                fetchpriority={i < eager ? 'high' : 'auto'}
+                decoding="async"
+              />
+              {(it.title || it.caption) && (
+                <>
+                  <span class="asg-egallery__scrim" aria-hidden="true" />
+                  <span class="asg-egallery__label" aria-hidden="true">
+                    {it.title && <strong>{it.title}</strong>}
+                    {it.caption && <span>{it.caption}</span>}
+                  </span>
+                </>
+              )}
+            </a>
+          </figure>
+        </li>
+      ))}
+    </ul>
+    {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
+  </>
+)}
 
 <script>
   import { initEditorialLightboxes } from '../internal/editorial-lightbox.js';

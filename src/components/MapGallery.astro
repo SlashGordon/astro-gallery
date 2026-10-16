@@ -174,84 +174,82 @@ const jsonLd =
     : '';
 ---
 
-{
-  markers.length > 0 && (
-    <>
-      <div
-        id={mapId}
-        class="asg-map"
-        data-asg-markers={JSON.stringify(markers)}
-        data-asg-tile-url={tileUrl}
-        data-asg-tile-attribution={tileAttribution}
-        data-asg-subdomains={subdomains}
-        data-asg-max-zoom={String(maxZoom)}
-        data-asg-scheme={scheme === 'auto' ? undefined : scheme}
-        data-asg-consent={consent ? 'true' : 'false'}
-        data-asg-consent-key={consentKey}
-        role="group"
-        aria-label={label}
-      >
-        {/* Crawlable, no-JS fallback — the client script hides this once the map is built. */}
-        <ul class="asg-map__fallback" role="list" data-asg-map-fallback>
-          {markers.map((m) => (
-            <li>
-              <a href={m.fullSrc}>
-                <img
-                  src={m.thumbSrc}
-                  alt={m.alt}
-                  width={m.width}
-                  height={m.height}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </a>
-              {(m.location || m.date) && (
-                <span>{[m.location, m.date].filter(Boolean).join(' · ')}</span>
-              )}
-            </li>
-          ))}
-        </ul>
+{markers.length > 0 && (
+  <>
+    <div
+      id={mapId}
+      class="asg-map"
+      data-asg-markers={JSON.stringify(markers)}
+      data-asg-tile-url={tileUrl}
+      data-asg-tile-attribution={tileAttribution}
+      data-asg-subdomains={subdomains}
+      data-asg-max-zoom={String(maxZoom)}
+      data-asg-scheme={scheme === 'auto' ? undefined : scheme}
+      data-asg-consent={consent ? 'true' : 'false'}
+      data-asg-consent-key={consentKey}
+      role="group"
+      aria-label={label}
+    >
+      {/* Crawlable, no-JS fallback — the client script hides this once the map is built. */}
+      <ul class="asg-map__fallback" role="list" data-asg-map-fallback>
+        {markers.map((m) => (
+          <li>
+            <a href={m.fullSrc}>
+              <img
+                src={m.thumbSrc}
+                alt={m.alt}
+                width={m.width}
+                height={m.height}
+                loading="lazy"
+                decoding="async"
+              />
+            </a>
+            {(m.location || m.date) && (
+              <span>{[m.location, m.date].filter(Boolean).join(' · ')}</span>
+            )}
+          </li>
+        ))}
+      </ul>
 
-        {consent && (
-          <div class="asg-map__consent">
-            <div class="asg-map__consent-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"
-                />
-                <circle cx="12" cy="11" r="3" />
-              </svg>
-            </div>
-            <div>
-              <h3>{consentTitle}</h3>
-              <p set:html={consentText} />
-            </div>
-            <span class="asg-map__count">{markers.length} photos with GPS data</span>
-            <button type="button" class="asg-map__consent-btn">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                />
-              </svg>
-              {consentButtonLabel}
-            </button>
+      {consent && (
+        <div class="asg-map__consent">
+          <div class="asg-map__consent-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"
+              />
+              <circle cx="12" cy="11" r="3" />
+            </svg>
           </div>
-        )}
-      </div>
-      {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
-    </>
-  )
-}
+          <div>
+            <h3>{consentTitle}</h3>
+            <p set:html={consentText} />
+          </div>
+          <span class="asg-map__count">{markers.length} photos with GPS data</span>
+          <button type="button" class="asg-map__consent-btn">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+              />
+            </svg>
+            {consentButtonLabel}
+          </button>
+        </div>
+      )}
+    </div>
+    {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
+  </>
+)}
 
 <script>
   import L from 'leaflet';

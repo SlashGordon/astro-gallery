@@ -122,115 +122,113 @@ geocoder?.flush();
 const label = album ? `${album} timeline` : 'Photo timeline';
 ---
 
-{
-  groups.length > 0 && (
-    <section
-      class:list={['asg-timeline', `asg-timeline--${orientation}`]}
-      data-asg-orientation={orientation}
-      aria-label={label}
-      data-asg-lightbox="true"
-    >
-      <div class="asg-timeline__scroller">
-        <div class="asg-timeline__rail">
-          <div class="asg-timeline__line" aria-hidden="true" />
-          <ol class="asg-timeline__groups" role="list">
-            {groups.map((group) => (
-              <li class="asg-timeline__group">
-                <span class="asg-timeline__node" aria-hidden="true" />
-                {group.isoDate ? (
-                  <time class="asg-timeline__date" datetime={group.isoDate}>
-                    {group.dateLabel}
-                  </time>
-                ) : (
-                  <span class="asg-timeline__date">{group.dateLabel}</span>
-                )}
+{groups.length > 0 && (
+  <section
+    class:list={['asg-timeline', `asg-timeline--${orientation}`]}
+    data-asg-orientation={orientation}
+    aria-label={label}
+    data-asg-lightbox="true"
+  >
+    <div class="asg-timeline__scroller">
+      <div class="asg-timeline__rail">
+        <div class="asg-timeline__line" aria-hidden="true" />
+        <ol class="asg-timeline__groups" role="list">
+          {groups.map((group) => (
+            <li class="asg-timeline__group">
+              <span class="asg-timeline__node" aria-hidden="true" />
+              {group.isoDate ? (
+                <time class="asg-timeline__date" datetime={group.isoDate}>
+                  {group.dateLabel}
+                </time>
+              ) : (
+                <span class="asg-timeline__date">{group.dateLabel}</span>
+              )}
 
-                <div class="asg-timeline__grid">
-                  {group.photos.slice(0, maxPerGroup).map((photo, i) => (
-                    <a
-                      class="asg-timeline__item asg-lb-item"
-                      href={photo.fullSrc}
-                      data-asg-full={photo.fullSrc}
-                      data-asg-alt={photo.alt}
-                      data-asg-caption={group.location}
-                      aria-label={photo.alt}
-                    >
-                      <img
-                        src={photo.thumbSrc}
-                        alt={photo.alt}
-                        width={photo.width}
-                        height={photo.height}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      {i === maxPerGroup - 1 && group.photos.length > maxPerGroup && (
-                        <span class="asg-timeline__more" aria-hidden="true">
-                          +{group.photos.length - maxPerGroup}
-                        </span>
-                      )}
-                    </a>
-                  ))}
+              <div class="asg-timeline__grid">
+                {group.photos.slice(0, maxPerGroup).map((photo, i) => (
+                  <a
+                    class="asg-timeline__item asg-lb-item"
+                    href={photo.fullSrc}
+                    data-asg-full={photo.fullSrc}
+                    data-asg-alt={photo.alt}
+                    data-asg-caption={group.location}
+                    aria-label={photo.alt}
+                  >
+                    <img
+                      src={photo.thumbSrc}
+                      alt={photo.alt}
+                      width={photo.width}
+                      height={photo.height}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    {i === maxPerGroup - 1 && group.photos.length > maxPerGroup && (
+                      <span class="asg-timeline__more" aria-hidden="true">
+                        +{group.photos.length - maxPerGroup}
+                      </span>
+                    )}
+                  </a>
+                ))}
+              </div>
+
+              {(group.location || group.camera) && (
+                <div class="asg-timeline__meta">
+                  {group.location && (
+                    <span>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"
+                        />
+                        <circle cx="12" cy="11" r="3" />
+                      </svg>{' '}
+                      {group.location}
+                    </span>
+                  )}
+                  {group.camera && (
+                    <span>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <circle cx="12" cy="13" r="3" />
+                      </svg>{' '}
+                      {group.camera}
+                    </span>
+                  )}
                 </div>
-
-                {(group.location || group.camera) && (
-                  <div class="asg-timeline__meta">
-                    {group.location && (
-                      <span>
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          aria-hidden="true"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"
-                          />
-                          <circle cx="12" cy="11" r="3" />
-                        </svg>{' '}
-                        {group.location}
-                      </span>
-                    )}
-                    {group.camera && (
-                      <span>
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          aria-hidden="true"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                          />
-                          <circle cx="12" cy="13" r="3" />
-                        </svg>{' '}
-                        {group.camera}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ol>
-        </div>
+              )}
+            </li>
+          ))}
+        </ol>
       </div>
+    </div>
 
-      {orientation === 'horizontal' && scrollHint && groups.length > 1 && (
-        <p class="asg-timeline__hint" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-          <span>{scrollHint}</span>
-        </p>
-      )}
-    </section>
-  )
-}
+    {orientation === 'horizontal' && scrollHint && groups.length > 1 && (
+      <p class="asg-timeline__hint" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+        <span>{scrollHint}</span>
+      </p>
+    )}
+  </section>
+)}
 
 <script>
   import { initLightboxes } from '../internal/lightbox.js';

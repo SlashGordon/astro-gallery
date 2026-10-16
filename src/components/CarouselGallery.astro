@@ -178,120 +178,118 @@ const jsonLd =
 const style = `--asg-car-ar:${cardAspectRatio}`;
 ---
 
-{
-  cards.length > 0 && (
-    <>
-      <section
-        class="asg-carousel"
-        aria-roledescription="carousel"
-        aria-label={label}
-        style={style}
-        data-asg-autoplay={autoplay ? 'true' : 'false'}
-        data-asg-interval={String(interval)}
-        data-asg-loop={loop ? 'true' : 'false'}
-        tabindex="0"
-      >
-        <div class="asg-carousel__viewport">
-          <div class="asg-carousel__track">
-            {cards.map((c, i) => (
-              <figure
-                class:list={['asg-carousel__card', i === 0 && 'is-current']}
-                role="group"
-                aria-roledescription="slide"
-                aria-label={`${i + 1} of ${cards.length}`}
-              >
-                <div class="asg-carousel__frame">
-                  <img
-                    src={c.src}
-                    srcset={c.srcset || undefined}
-                    sizes={c.srcset ? sizes : undefined}
-                    width={c.width || undefined}
-                    height={c.height || undefined}
-                    alt={c.alt}
-                    loading={i < eager ? 'eager' : 'lazy'}
-                    fetchpriority={i < eager ? 'high' : 'auto'}
-                    decoding="async"
-                    draggable="false"
-                  />
-                </div>
-              </figure>
-            ))}
-          </div>
-
-          {multi && (
-            <>
-              <button
-                class="asg-carousel__nav asg-carousel__nav--prev"
-                type="button"
-                aria-label={text.previous}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M15 5l-7 7 7 7" />
-                </svg>
-              </button>
-              <button
-                class="asg-carousel__nav asg-carousel__nav--next"
-                type="button"
-                aria-label={text.next}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </>
-          )}
+{cards.length > 0 && (
+  <>
+    <section
+      class="asg-carousel"
+      aria-roledescription="carousel"
+      aria-label={label}
+      style={style}
+      data-asg-autoplay={autoplay ? 'true' : 'false'}
+      data-asg-interval={String(interval)}
+      data-asg-loop={loop ? 'true' : 'false'}
+      tabindex="0"
+    >
+      <div class="asg-carousel__viewport">
+        <div class="asg-carousel__track">
+          {cards.map((c, i) => (
+            <figure
+              class:list={['asg-carousel__card', i === 0 && 'is-current']}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${i + 1} of ${cards.length}`}
+            >
+              <div class="asg-carousel__frame">
+                <img
+                  src={c.src}
+                  srcset={c.srcset || undefined}
+                  sizes={c.srcset ? sizes : undefined}
+                  width={c.width || undefined}
+                  height={c.height || undefined}
+                  alt={c.alt}
+                  loading={i < eager ? 'eager' : 'lazy'}
+                  fetchpriority={i < eager ? 'high' : 'auto'}
+                  decoding="async"
+                  draggable="false"
+                />
+              </div>
+            </figure>
+          ))}
         </div>
 
-        {hasCaptions && (
-          <div class="asg-carousel__caption-dock">
-            {cards.map(
-              (c, i) =>
-                (c.title || c.caption) && (
-                  <figcaption class="asg-carousel__caption" hidden={i !== 0}>
-                    {c.title && <p class="asg-carousel__title">{c.title}</p>}
-                    {c.caption && <p class="asg-carousel__text">{c.caption}</p>}
-                  </figcaption>
-                ),
-            )}
-          </div>
+        {multi && (
+          <>
+            <button
+              class="asg-carousel__nav asg-carousel__nav--prev"
+              type="button"
+              aria-label={text.previous}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M15 5l-7 7 7 7" />
+              </svg>
+            </button>
+            <button
+              class="asg-carousel__nav asg-carousel__nav--next"
+              type="button"
+              aria-label={text.next}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </>
         )}
+      </div>
 
-        {multi && dots && (
-          <div class="asg-carousel__dots" role="tablist" aria-label={label}>
-            {cards.map((_, i) => (
-              <button
-                class="asg-carousel__dot"
-                type="button"
-                role="tab"
-                aria-current={i === 0 ? 'true' : 'false'}
-                aria-label={text.goToSlide.replace('{n}', String(i + 1))}
-              />
-            ))}
-          </div>
-        )}
+      {hasCaptions && (
+        <div class="asg-carousel__caption-dock">
+          {cards.map(
+            (c, i) =>
+              (c.title || c.caption) && (
+                <figcaption class="asg-carousel__caption" hidden={i !== 0}>
+                  {c.title && <p class="asg-carousel__title">{c.title}</p>}
+                  {c.caption && <p class="asg-carousel__text">{c.caption}</p>}
+                </figcaption>
+              ),
+          )}
+        </div>
+      )}
 
-        <p class="asg-carousel__status" aria-live="polite" aria-atomic="true" />
-      </section>
-      {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
-    </>
-  )
-}
+      {multi && dots && (
+        <div class="asg-carousel__dots" role="tablist" aria-label={label}>
+          {cards.map((_, i) => (
+            <button
+              class="asg-carousel__dot"
+              type="button"
+              role="tab"
+              aria-current={i === 0 ? 'true' : 'false'}
+              aria-label={text.goToSlide.replace('{n}', String(i + 1))}
+            />
+          ))}
+        </div>
+      )}
+
+      <p class="asg-carousel__status" aria-live="polite" aria-atomic="true" />
+    </section>
+    {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
+  </>
+)}
 
 <script>
   import { initCarousels } from '../internal/carousel.js';

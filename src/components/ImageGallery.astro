@@ -160,63 +160,61 @@ const jsonLd =
     : '';
 ---
 
-{
-  entries.length > 0 && (
-    <>
-      <ul
-        class:list={['asg-gallery', `asg-gallery--cols-${columns}`, `asg-gallery--${variant}`]}
-        role="list"
-        aria-label={label}
-        style={gap ? `--asg-gap:${gap}` : undefined}
-        data-asg-lightbox={lightbox ? 'true' : 'false'}
-        data-asg-reveal="true"
-      >
-        {entries.map((e, i) => (
-          <li class="asg-gallery__cell" style={`--asg-reveal-i:${i}`}>
-            <figure class="asg-gallery__figure">
-              <a
-                class="asg-gallery__item asg-lb-item"
-                href={e.fullSrc}
-                data-asg-full={e.fullSrc}
-                data-asg-alt={e.alt}
-                data-asg-caption={e.caption}
-                aria-label={e.caption || e.alt}
-              >
-                <img
-                  src={e.src}
-                  srcset={e.srcset || undefined}
-                  sizes={e.srcset ? imgSizes : undefined}
-                  width={e.width}
-                  height={e.height}
-                  alt={e.alt}
-                  loading={i === 0 ? 'eager' : loading}
-                  fetchpriority={i === 0 ? 'high' : 'auto'}
-                  decoding="async"
-                />
-                <span class="asg-gallery__zoom" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <circle cx="10.5" cy="10.5" r="6.5" />
-                    <path d="M20 20l-4.7-4.7" stroke-linecap="round" />
-                  </svg>
-                </span>
-                {variant === 'masonry' && e.caption && (
-                  <span class="asg-gallery__scrim" aria-hidden="true" />
-                )}
-                {variant === 'masonry' && e.caption && (
-                  <span class="asg-gallery__label">{e.caption}</span>
-                )}
-              </a>
-              {variant === 'grid' && e.caption && (
-                <figcaption class="asg-gallery__caption">{e.caption}</figcaption>
+{entries.length > 0 && (
+  <>
+    <ul
+      class:list={['asg-gallery', `asg-gallery--cols-${columns}`, `asg-gallery--${variant}`]}
+      role="list"
+      aria-label={label}
+      style={gap ? `--asg-gap:${gap}` : undefined}
+      data-asg-lightbox={lightbox ? 'true' : 'false'}
+      data-asg-reveal="true"
+    >
+      {entries.map((e, i) => (
+        <li class="asg-gallery__cell" style={`--asg-reveal-i:${i}`}>
+          <figure class="asg-gallery__figure">
+            <a
+              class="asg-gallery__item asg-lb-item"
+              href={e.fullSrc}
+              data-asg-full={e.fullSrc}
+              data-asg-alt={e.alt}
+              data-asg-caption={e.caption}
+              aria-label={e.caption || e.alt}
+            >
+              <img
+                src={e.src}
+                srcset={e.srcset || undefined}
+                sizes={e.srcset ? imgSizes : undefined}
+                width={e.width}
+                height={e.height}
+                alt={e.alt}
+                loading={i === 0 ? 'eager' : loading}
+                fetchpriority={i === 0 ? 'high' : 'auto'}
+                decoding="async"
+              />
+              <span class="asg-gallery__zoom" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="10.5" cy="10.5" r="6.5" />
+                  <path d="M20 20l-4.7-4.7" stroke-linecap="round" />
+                </svg>
+              </span>
+              {variant === 'masonry' && e.caption && (
+                <span class="asg-gallery__scrim" aria-hidden="true" />
               )}
-            </figure>
-          </li>
-        ))}
-      </ul>
-      {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
-    </>
-  )
-}
+              {variant === 'masonry' && e.caption && (
+                <span class="asg-gallery__label">{e.caption}</span>
+              )}
+            </a>
+            {variant === 'grid' && e.caption && (
+              <figcaption class="asg-gallery__caption">{e.caption}</figcaption>
+            )}
+          </figure>
+        </li>
+      ))}
+    </ul>
+    {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
+  </>
+)}
 
 <script>
   import { initLightboxes } from '../internal/lightbox.js';

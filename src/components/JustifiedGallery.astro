@@ -172,48 +172,46 @@ const jsonLd =
     : '';
 ---
 
-{
-  items.length > 0 && (
-    <>
-      <ul
-        class="asg-jgallery"
-        role="list"
-        aria-label={label}
-        data-asg-lightbox={lightbox ? 'true' : 'false'}
-        style={`--asg-row-h:${rowHeight}px;${gap ? `--asg-gap:${gap};` : ''}`}
-      >
-        {items.map((it, i) => (
-          <li class="asg-jgallery__cell" style={`--asg-ar:${it.aspectRatio.toFixed(4)}`}>
-            <figure class="asg-jgallery__figure">
-              <a
-                class="asg-jgallery__item asg-lb-item"
-                href={it.fullSrc}
-                data-asg-full={it.fullSrc}
-                data-asg-alt={it.alt}
-                data-asg-caption={it.caption}
-                aria-label={it.caption || it.alt}
-              >
-                <img
-                  src={it.src}
-                  srcset={it.srcset || undefined}
-                  sizes={it.srcset ? sizes : undefined}
-                  width={it.width || undefined}
-                  height={it.height || undefined}
-                  alt={it.alt}
-                  loading={i < eager ? 'eager' : 'lazy'}
-                  fetchpriority={i < eager ? 'high' : 'auto'}
-                  decoding="async"
-                />
-              </a>
-              {it.caption && <figcaption class="asg-jgallery__caption">{it.caption}</figcaption>}
-            </figure>
-          </li>
-        ))}
-      </ul>
-      {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
-    </>
-  )
-}
+{items.length > 0 && (
+  <>
+    <ul
+      class="asg-jgallery"
+      role="list"
+      aria-label={label}
+      data-asg-lightbox={lightbox ? 'true' : 'false'}
+      style={`--asg-row-h:${rowHeight}px;${gap ? `--asg-gap:${gap};` : ''}`}
+    >
+      {items.map((it, i) => (
+        <li class="asg-jgallery__cell" style={`--asg-ar:${it.aspectRatio.toFixed(4)}`}>
+          <figure class="asg-jgallery__figure">
+            <a
+              class="asg-jgallery__item asg-lb-item"
+              href={it.fullSrc}
+              data-asg-full={it.fullSrc}
+              data-asg-alt={it.alt}
+              data-asg-caption={it.caption}
+              aria-label={it.caption || it.alt}
+            >
+              <img
+                src={it.src}
+                srcset={it.srcset || undefined}
+                sizes={it.srcset ? sizes : undefined}
+                width={it.width || undefined}
+                height={it.height || undefined}
+                alt={it.alt}
+                loading={i < eager ? 'eager' : 'lazy'}
+                fetchpriority={i < eager ? 'high' : 'auto'}
+                decoding="async"
+              />
+            </a>
+            {it.caption && <figcaption class="asg-jgallery__caption">{it.caption}</figcaption>}
+          </figure>
+        </li>
+      ))}
+    </ul>
+    {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
+  </>
+)}
 
 <script>
   import { initLightboxes } from '../internal/lightbox.js';

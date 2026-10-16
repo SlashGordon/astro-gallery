@@ -244,147 +244,145 @@ const style = [
   .join(';');
 ---
 
-{
-  slides.length > 0 && (
-    <>
-      <section
-        class:list={['asg-slides', `asg-slides--caption-${captionMode}`, `asg-slides--fit-${fit}`]}
-        aria-roledescription="carousel"
-        aria-label={label}
-        style={style}
-        data-asg-autoplay={autoplay ? 'true' : 'false'}
-        data-asg-interval={String(interval)}
-        data-asg-loop={loop ? 'true' : 'false'}
-        tabindex="0"
-      >
-        <div class="asg-slides__viewport">
-          <div class="asg-slides__track">
-            {slides.map((s, i) => (
-              <figure
-                class:list={['asg-slides__slide', i === 0 && 'is-current']}
-                role="group"
-                aria-roledescription="slide"
-                aria-label={`${i + 1} of ${slides.length}`}
-              >
-                <div class="asg-slides__frame">
-                  {fit === 'contain' && (
-                    <span
-                      class="asg-slides__fill"
-                      aria-hidden="true"
-                      style={`background-image:url("${s.src}")`}
-                    />
-                  )}
-                  <img
-                    class="asg-slides__img"
-                    src={s.src}
-                    srcset={s.srcset || undefined}
-                    sizes={s.srcset ? sizes : undefined}
-                    width={s.width || undefined}
-                    height={s.height || undefined}
-                    alt={s.alt}
-                    loading={i < eager ? 'eager' : 'lazy'}
-                    fetchpriority={i < eager ? 'high' : 'auto'}
-                    decoding="async"
-                    draggable="false"
+{slides.length > 0 && (
+  <>
+    <section
+      class:list={['asg-slides', `asg-slides--caption-${captionMode}`, `asg-slides--fit-${fit}`]}
+      aria-roledescription="carousel"
+      aria-label={label}
+      style={style}
+      data-asg-autoplay={autoplay ? 'true' : 'false'}
+      data-asg-interval={String(interval)}
+      data-asg-loop={loop ? 'true' : 'false'}
+      tabindex="0"
+    >
+      <div class="asg-slides__viewport">
+        <div class="asg-slides__track">
+          {slides.map((s, i) => (
+            <figure
+              class:list={['asg-slides__slide', i === 0 && 'is-current']}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${i + 1} of ${slides.length}`}
+            >
+              <div class="asg-slides__frame">
+                {fit === 'contain' && (
+                  <span
+                    class="asg-slides__fill"
+                    aria-hidden="true"
+                    style={`background-image:url("${s.src}")`}
                   />
-                </div>
-                {captionMode !== 'none' && (s.title || s.caption || s.meta) && (
-                  <figcaption class="asg-slides__caption">
-                    {s.meta && <p class="asg-slides__meta">{s.meta}</p>}
-                    {s.title && <p class="asg-slides__title">{s.title}</p>}
-                    {s.caption && <p class="asg-slides__text">{s.caption}</p>}
-                  </figcaption>
                 )}
-              </figure>
-            ))}
-          </div>
-
-          {multi && (
-            <div class="asg-slides__controls">
-              <button
-                class="asg-slides__nav asg-slides__nav--prev"
-                type="button"
-                aria-label={text.previous}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M15 5l-7 7 7 7" />
-                </svg>
-              </button>
-              <button
-                class="asg-slides__nav asg-slides__nav--next"
-                type="button"
-                aria-label={text.next}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-
-              {autoplay && (
-                <button
-                  class="asg-slides__play"
-                  type="button"
-                  aria-label={text.play}
-                  aria-pressed="false"
-                >
-                  <svg
-                    class="asg-slides__icon-play"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M8 5.5v13l11-6.5z" />
-                  </svg>
-                  <svg
-                    class="asg-slides__icon-pause"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z" />
-                  </svg>
-                </button>
+                <img
+                  class="asg-slides__img"
+                  src={s.src}
+                  srcset={s.srcset || undefined}
+                  sizes={s.srcset ? sizes : undefined}
+                  width={s.width || undefined}
+                  height={s.height || undefined}
+                  alt={s.alt}
+                  loading={i < eager ? 'eager' : 'lazy'}
+                  fetchpriority={i < eager ? 'high' : 'auto'}
+                  decoding="async"
+                  draggable="false"
+                />
+              </div>
+              {captionMode !== 'none' && (s.title || s.caption || s.meta) && (
+                <figcaption class="asg-slides__caption">
+                  {s.meta && <p class="asg-slides__meta">{s.meta}</p>}
+                  {s.title && <p class="asg-slides__title">{s.title}</p>}
+                  {s.caption && <p class="asg-slides__text">{s.caption}</p>}
+                </figcaption>
               )}
-            </div>
-          )}
+            </figure>
+          ))}
         </div>
 
-        {multi && dots && (
-          <div class="asg-slides__dots" role="tablist" aria-label={label}>
-            {slides.map((_, i) => (
+        {multi && (
+          <div class="asg-slides__controls">
+            <button
+              class="asg-slides__nav asg-slides__nav--prev"
+              type="button"
+              aria-label={text.previous}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M15 5l-7 7 7 7" />
+              </svg>
+            </button>
+            <button
+              class="asg-slides__nav asg-slides__nav--next"
+              type="button"
+              aria-label={text.next}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            {autoplay && (
               <button
-                class="asg-slides__dot"
+                class="asg-slides__play"
                 type="button"
-                role="tab"
-                aria-current={i === 0 ? 'true' : 'false'}
-                aria-label={text.goToSlide.replace('{n}', String(i + 1))}
-              />
-            ))}
+                aria-label={text.play}
+                aria-pressed="false"
+              >
+                <svg
+                  class="asg-slides__icon-play"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M8 5.5v13l11-6.5z" />
+                </svg>
+                <svg
+                  class="asg-slides__icon-pause"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z" />
+                </svg>
+              </button>
+            )}
           </div>
         )}
+      </div>
 
-        <p class="asg-slides__status" aria-live="polite" aria-atomic="true" />
-      </section>
-      {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
-    </>
-  )
-}
+      {multi && dots && (
+        <div class="asg-slides__dots" role="tablist" aria-label={label}>
+          {slides.map((_, i) => (
+            <button
+              class="asg-slides__dot"
+              type="button"
+              role="tab"
+              aria-current={i === 0 ? 'true' : 'false'}
+              aria-label={text.goToSlide.replace('{n}', String(i + 1))}
+            />
+          ))}
+        </div>
+      )}
+
+      <p class="asg-slides__status" aria-live="polite" aria-atomic="true" />
+    </section>
+    {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
+  </>
+)}
 
 <script>
   import { initSlideshows } from '../internal/slideshow.js';
