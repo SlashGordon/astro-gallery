@@ -78,22 +78,16 @@ interface Entry {
   height?: number;
 }
 
-/**
- * Row-span for the masonry variant. `grid-auto-rows` ticks in `ROW_UNIT`
- * slices; a taller (or narrower) photo just claims more of them. `REF_WIDTH`
- * is a nominal column width — its exact value doesn't matter, only that every
- * span is computed against the same one, since it cancels out visually.
- */
-const ROW_UNIT = 8;
-const REF_WIDTH = 400;
-function masonrySpan(width?: number, height?: number): number {
-  if (!width || !height) return 24;
-  return Math.max(6, Math.ceil((REF_WIDTH / (width / height) + 12) / ROW_UNIT));
-}
-
 const widths = config.responsiveWidths;
 const format = config.imageFormat;
-const defaultSizes = `(min-width: 640px) ${Math.round(100 / columns)}vw, 100vw`;
+// Column counts per breakpoint, mirroring `.asg-gallery--cols-*` in gallery.css.
+const phoneCols = columns === 1 ? 1 : 2;
+const tabletCols = columns === 5 ? 3 : Math.min(columns, 2);
+const defaultSizes = [
+  `(min-width: 1024px) ${Math.round(100 / columns)}vw`,
+  `(min-width: 640px) ${Math.round(100 / tabletCols)}vw`,
+  `${Math.round(100 / phoneCols)}vw`,
+].join(', ');
 const imgSizes = sizes ?? defaultSizes;
 
 let entries: Entry[] = [];
@@ -178,14 +172,7 @@ const jsonLd =
         data-asg-reveal="true"
       >
         {entries.map((e, i) => (
-          <li
-            class="asg-gallery__cell"
-            style={
-              variant === 'masonry'
-                ? `--asg-span:${masonrySpan(e.width, e.height)};--asg-reveal-i:${i}`
-                : `--asg-reveal-i:${i}`
-            }
-          >
+          <li class="asg-gallery__cell" style={`--asg-reveal-i:${i}`}>
             <figure class="asg-gallery__figure">
               <a
                 class="asg-gallery__item asg-lb-item"
@@ -237,7 +224,7 @@ const jsonLd =
   /**
    * One orchestrated entrance per gallery: cells fade and rise into place as
    * they cross the viewport, staggered by their grid position. Fires once per
-   * element, and never runs at all under `prefers-reduced-motion`.
+   * element and never runs at all under `prefers-reduced-motion`.
    */
   function initReveal(): void {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;

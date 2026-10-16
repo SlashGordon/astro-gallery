@@ -69,13 +69,14 @@
  * `.prose ul` and hand-rolled blog stylesheets alike set `list-style: disc` and
  * `padding-left` on every `ul`, a single-class selector like `.asg-gallery`
  * loses that specificity fight when the host rule is `.prose ul` / `.blog-body
- * ul` (class + type beats class alone), and every photo grows a bullet.
+ * ul` (class + type beats class alone) and every photo grows a bullet.
  * Same fix as the `img` reset above: neutralise regardless of load order.
  */
 .asg-gallery {
   display: grid;
   gap: var(--asg-gap);
-  grid-template-columns: repeat(var(--asg-cols, 3), minmax(0, 1fr));
+  /* Phones get two columns unless `columns={1}` asks for one; see below. */
+  grid-template-columns: repeat(var(--asg-cols, 2), minmax(0, 1fr));
   margin: 2rem 0 !important;
   padding: 0 !important;
   list-style: none !important;
@@ -233,7 +234,7 @@
 /*
  * A quiet museum-placard treatment rather than plain muted text: a short
  * hairline tick stands in for the eyebrow label / quote mark a caption would
- * otherwise reach for, and ties into the print motif the other variants and
+ * otherwise reach for and ties into the print motif the other variants and
  * `CarouselGallery` already lean on.
  */
 .asg-gallery__caption {
@@ -259,27 +260,23 @@
 /* ---------------------------------------------------------- masonry variant -- */
 
 /*
- * `dense` backfills short columns instead of leaving a gap under every tall
- * photo — without it the row-major default strands whole columns of empty
- * space under one early panorama. The trade-off is visual order can drift
- * from DOM order; acceptable here since a photo grid has no reading sequence.
+ * CSS multi-column rather than a row-span grid: every photo keeps its own ratio
+ * at any column width, with no script and no span maths. Photos flow down one
+ * column before the next, which also matches the lightbox's next/previous order.
  */
 .asg-gallery--masonry {
-  grid-auto-rows: 8px;
-  grid-auto-flow: dense;
-  align-items: stretch;
+  display: block;
+  columns: var(--asg-cols, 2);
+  column-gap: var(--asg-gap);
 }
 
 .asg-gallery--masonry .asg-gallery__cell {
-  grid-row: span var(--asg-span, 24);
+  break-inside: avoid;
+  margin-bottom: var(--asg-gap);
 }
 
-.asg-gallery--masonry .asg-gallery__figure {
-  height: 100%;
-}
-
-.asg-gallery--masonry .asg-gallery__item {
-  height: 100%;
+.asg-gallery--masonry .asg-gallery__item img {
+  height: auto;
 }
 
 .asg-gallery--masonry .asg-gallery__scrim {
@@ -319,6 +316,23 @@
 .asg-gallery--masonry .asg-gallery__item:focus-visible .asg-gallery__label {
   opacity: 1;
   transform: none;
+}
+
+@media (hover: none) {
+  /* Touch never hovers: show a short label; the lightbox has the full text. */
+  .asg-gallery--masonry .asg-gallery__scrim,
+  .asg-gallery--masonry .asg-gallery__label {
+    opacity: 1;
+    transform: none;
+  }
+
+  .asg-gallery--masonry .asg-gallery__label {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
 }
 
 /* ------------------------------------------------------- Justified gallery -- */
@@ -434,6 +448,18 @@
 .asg-jgallery__cell:hover .asg-jgallery__caption,
 .asg-jgallery__item:focus-visible + .asg-jgallery__caption {
   opacity: 1;
+}
+
+@media (hover: none) {
+  /* Touch never hovers: show a short label; the lightbox has the full text. */
+  .asg-jgallery__caption {
+    opacity: 1;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1142,6 +1168,26 @@
   transform: none;
 }
 
+@media (hover: none) {
+  /* Touch never hovers: the title alone on one line; the reader has the rest. */
+  .asg-egallery__scrim,
+  .asg-egallery__label {
+    opacity: 1;
+    transform: none;
+  }
+
+  .asg-egallery__label strong + span {
+    display: none;
+  }
+
+  .asg-egallery__label > * {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 /* ----------------------------------------------- Editorial fullscreen view -- */
 
 /*
@@ -1374,7 +1420,7 @@
   scrollbar-color: var(--eglb-line) transparent;
   /*
    * Always reserve the scrollbar track. Without this a photo with a long caption
-   * makes the panel scrollable, the content box narrows, and every line of text
+   * makes the panel scrollable, the content box narrows and every line of text
    * reflows sideways — so the copy visibly jumps as you move between photos.
    */
   scrollbar-gutter: stable;
@@ -1677,6 +1723,8 @@
   position: relative;
   margin: 2rem 0;
   outline: none;
+  /* Sized by its own width, not the viewport: see the docked caption below. */
+  container: asg-slides / inline-size;
 }
 
 .asg-slides:focus-visible {
@@ -1693,7 +1741,7 @@
   aspect-ratio: var(--asg-slides-ar);
   /*
    * Own the stacking context. Without it the glass panels inside can escape the
-   * rounded clip in WebKit, and the compositor re-rasterises the radius on every
+   * rounded clip in WebKit and the compositor re-rasterises the radius on every
    * frame of the track transition.
    */
   isolation: isolate;
@@ -1736,6 +1784,12 @@
   from {
     opacity: 0;
   }
+}
+
+/* The photo's own box, so the docked caption can sit outside it. */
+.asg-slides__frame {
+  position: relative;
+  height: 100%;
 }
 
 /* `fit="contain"`: the letterbox is filled with a blurred copy of the photo. */
@@ -1822,6 +1876,70 @@
   }
 }
 
+/*
+ * Docked caption. On a narrow stage a few lines of copy cover the whole photo,
+ * so the caption leaves the image and sits underneath it instead. Each caption
+ * stays inside its slide and travels with the track; the track stretches every
+ * slide to the tallest one, so the dots below never jump between photos.
+ */
+@container asg-slides (max-width: 40rem) {
+  .asg-slides__viewport {
+    aspect-ratio: auto;
+    border-radius: 0;
+    background: none;
+  }
+
+  .asg-slides__track {
+    height: auto;
+  }
+
+  .asg-slides__slide {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
+  .asg-slides__frame {
+    flex: none;
+    height: auto;
+    aspect-ratio: var(--asg-slides-ar);
+    overflow: hidden;
+    border-radius: var(--asg-slides-radius);
+    background: var(--asg-surface-2);
+    isolation: isolate;
+  }
+
+  .asg-slides .asg-slides__slide .asg-slides__caption {
+    position: static;
+    max-width: none;
+    padding: 0.9rem 0.15rem 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    color: var(--asg-text);
+    opacity: 1;
+    transform: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Prefixed: the base type rules come later in the file. */
+  .asg-slides .asg-slides__meta,
+  .asg-slides .asg-slides__text {
+    color: var(--asg-text-muted);
+  }
+
+  .asg-slides .asg-slides__title {
+    font-size: 1.05rem;
+  }
+
+  .asg-slides .asg-slides__text {
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+}
+
 .asg-slides__meta {
   margin: 0 0 0.4rem;
   font-size: 0.68rem;
@@ -1849,6 +1967,25 @@
 }
 
 /* --------------------------------------------------------------- controls -- */
+
+/*
+ * The controls ride on a layer cut to the photo's ratio rather than on the
+ * viewport, so the arrows stay centred on the image when the caption docks
+ * below it.
+ */
+.asg-slides__controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  aspect-ratio: var(--asg-slides-ar);
+  pointer-events: none;
+}
+
+.asg-slides__controls > * {
+  pointer-events: auto;
+}
 
 .asg-slides__nav,
 .asg-slides__play {

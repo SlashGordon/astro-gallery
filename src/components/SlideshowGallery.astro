@@ -1,7 +1,8 @@
 ---
 /**
  * One image at a time on a translate-driven track, with a glass caption card
- * that rises over the current slide on hover or focus.
+ * that rises over the current slide on hover or focus. On a stage narrower
+ * than 40rem the caption docks below the photo instead of covering it.
  *
  * The track is the only thing that moves: a single `translate3d()` on a
  * compositor-friendly transform, eased with a shared expo-out curve.
@@ -52,7 +53,10 @@ interface Props {
    * worth it when the set mixes portrait and landscape.
    */
   fit?: 'cover' | 'contain';
-  /** When the glass caption shows. Default `"hover"`. */
+  /**
+   * When the glass caption shows. Default `"hover"`. On a stage narrower than
+   * 40rem, `"hover"` and `"always"` both dock the caption below the photo.
+   */
   captionMode?: 'hover' | 'always' | 'none';
   /** Advance on a timer. Default `false` — never starts under reduced motion. */
   autoplay?: boolean;
@@ -262,26 +266,28 @@ const style = [
                 aria-roledescription="slide"
                 aria-label={`${i + 1} of ${slides.length}`}
               >
-                {fit === 'contain' && (
-                  <span
-                    class="asg-slides__fill"
-                    aria-hidden="true"
-                    style={`background-image:url("${s.src}")`}
+                <div class="asg-slides__frame">
+                  {fit === 'contain' && (
+                    <span
+                      class="asg-slides__fill"
+                      aria-hidden="true"
+                      style={`background-image:url("${s.src}")`}
+                    />
+                  )}
+                  <img
+                    class="asg-slides__img"
+                    src={s.src}
+                    srcset={s.srcset || undefined}
+                    sizes={s.srcset ? sizes : undefined}
+                    width={s.width || undefined}
+                    height={s.height || undefined}
+                    alt={s.alt}
+                    loading={i < eager ? 'eager' : 'lazy'}
+                    fetchpriority={i < eager ? 'high' : 'auto'}
+                    decoding="async"
+                    draggable="false"
                   />
-                )}
-                <img
-                  class="asg-slides__img"
-                  src={s.src}
-                  srcset={s.srcset || undefined}
-                  sizes={s.srcset ? sizes : undefined}
-                  width={s.width || undefined}
-                  height={s.height || undefined}
-                  alt={s.alt}
-                  loading={i < eager ? 'eager' : 'lazy'}
-                  fetchpriority={i < eager ? 'high' : 'auto'}
-                  decoding="async"
-                  draggable="false"
-                />
+                </div>
                 {captionMode !== 'none' && (s.title || s.caption || s.meta) && (
                   <figcaption class="asg-slides__caption">
                     {s.meta && <p class="asg-slides__meta">{s.meta}</p>}
@@ -294,7 +300,7 @@ const style = [
           </div>
 
           {multi && (
-            <>
+            <div class="asg-slides__controls">
               <button
                 class="asg-slides__nav asg-slides__nav--prev"
                 type="button"
@@ -329,33 +335,33 @@ const style = [
                   <path d="M9 5l7 7-7 7" />
                 </svg>
               </button>
-            </>
-          )}
 
-          {multi && autoplay && (
-            <button
-              class="asg-slides__play"
-              type="button"
-              aria-label={text.play}
-              aria-pressed="false"
-            >
-              <svg
-                class="asg-slides__icon-play"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M8 5.5v13l11-6.5z" />
-              </svg>
-              <svg
-                class="asg-slides__icon-pause"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z" />
-              </svg>
-            </button>
+              {autoplay && (
+                <button
+                  class="asg-slides__play"
+                  type="button"
+                  aria-label={text.play}
+                  aria-pressed="false"
+                >
+                  <svg
+                    class="asg-slides__icon-play"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M8 5.5v13l11-6.5z" />
+                  </svg>
+                  <svg
+                    class="asg-slides__icon-pause"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z" />
+                  </svg>
+                </button>
+              )}
+            </div>
           )}
         </div>
 

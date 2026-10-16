@@ -39,7 +39,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   is positioned from its *wrapped* distance to the centre rather than DOM
   order, so `loop` fans correctly at both ends. Arrow / `Home` / `End` keys,
   dot indicators, optional autoplay with reduced-motion opt-out, a polite live
-  region, and `folderPath` / `images` / `alt` / `captions` / `titles` /
+  region and `folderPath` / `images` / `alt` / `captions` / `titles` /
   `labels` following the same conventions as the other galleries.
 
 - **`<ImageGallery />` — `variant="masonry"`** keeps each photo's own aspect
@@ -48,18 +48,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   gaps, no JS layout pass). The caption moves to a hover scrim riding on the
   image in this variant, since there's no uniform cell for a `<figcaption>`.
   The default grid also gained a one-pass scroll-triggered entrance (skipped
-  under `prefers-reduced-motion`), a stronger hover/focus lift, and a zoom-in
-  affordance icon — a clearer cue than `cursor: zoom-in` alone, and one that
+  under `prefers-reduced-motion`), a stronger hover/focus lift and a zoom-in
+  affordance icon — a clearer cue than `cursor: zoom-in` alone and one that
   shows up on keyboard focus too.
 
 - **`<SlideshowGallery />`** — one photo at a time on a track driven by a single
   `translate3d()` (never widths or margins), eased on a `cubic-bezier(0.16, 1, 0.3, 1)`
   expo-out curve. The caption is a glassmorphism card inset from the 24px stage
-  that rises and fades in on hover or focus of the current slide, and stays open
+  that rises and fades in on hover or focus of the current slide and stays open
   on touch. Pointer drag tracks 1:1 and settles on the same curve; arrow /
-  `Home` / `End` keys, dot indicators, and optional autoplay with a pause
+  `Home` / `End` keys, dot indicators and optional autoplay with a pause
   control. Off-screen slides are `inert`, slide changes are announced through a
-  polite live region, and everything is dropped under `prefers-reduced-motion`.
+  polite live region and everything is dropped under `prefers-reduced-motion`.
   Props include `aspectRatio`, `radius`, `fit` (`cover` / `contain`, the latter
   filling the letterbox with a blurred copy of the frame), `captionMode`,
   `autoplay` / `interval`, `loop`, `dots` and a locale-aware `labels`.
@@ -69,7 +69,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the title, the caption and the EXIF facts (capture date, camera,
   reverse-geocoded place, source pixel size), over a blurred wash of the current
   photo. Filmstrip navigation, a collapsible panel, arrow/`Home`/`End` keys,
-  touch swipe, a focus trap and focus restore, and a bottom-sheet layout below
+  touch swipe, a focus trap and focus restore and a bottom-sheet layout below
   900px. New `titles` prop for per-file panel titles and a `labels` prop
   (locale-dictionary aware) for the viewer's own copy; retheme through the
   `--eglb-*` custom properties.
@@ -89,7 +89,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `MapGallery` now clusters markers by proximity: photos closer than ~52px at the
   current zoom merge into a single pin with a count badge. Clicking a cluster
-  zooms to its bounds, or — at max zoom / when the photos share a spot — opens
+  zooms to its bounds or — at max zoom / when the photos share a spot — opens
   the stack in the lightbox. Re-clustering runs on every zoom.
 
 ## [1.0.3] - 2026-08-31

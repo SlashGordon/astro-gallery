@@ -130,7 +130,7 @@ function mount(root: HTMLElement): void {
     playBtn.addEventListener('click', () => (playing ? stop() : start()));
   }
 
-  // Pause while the visitor is reading, and while the tab is in the background.
+  // Pause while the visitor is reading and while the tab is in the background.
   if (cfg.autoplay) {
     root.addEventListener('pointerenter', () => playing && stop());
     root.addEventListener('focusin', () => playing && stop());

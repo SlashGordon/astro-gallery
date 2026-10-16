@@ -128,7 +128,7 @@ if (folderPath) {
   const matched = selectFolderEntries(allImages, target);
   const cwd = process.cwd();
 
-  // Sequential: the geocoder rate-limits itself, and Promise.all would just
+  // Sequential: the geocoder rate-limits itself and Promise.all would just
   // queue every lookup at once anyway.
   let i = 0;
   for (const [key, mod] of matched) {

@@ -14,7 +14,7 @@ export interface TimelinePhoto {
 }
 
 export interface TimelineGroup {
-  /** `YYYY-MM-DD`, or `""` for the trailing "undated" bucket. */
+  /** `YYYY-MM-DD` or `""` for the trailing "undated" bucket. */
   isoDate: string;
   dateLabel: string;
   camera: string;

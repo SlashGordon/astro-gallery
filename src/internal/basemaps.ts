@@ -76,7 +76,7 @@ export const BASEMAPS: Record<BasemapId, Basemap> = {
     tileUrl:
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     tileAttribution:
-      'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+      'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics and the GIS User Community',
     subdomains: '',
     maxZoom: 19,
     scheme: 'dark',

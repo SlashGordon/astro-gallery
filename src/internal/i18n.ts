@@ -7,7 +7,7 @@
 /** Text keyed by locale/language code. `default` / `*` act as a catch-all. */
 export type LocalizedText = Record<string, string>;
 
-/** A text option: one string, or a per-locale dictionary. */
+/** A text option: one string or a per-locale dictionary. */
 export type MaybeLocalized = string | LocalizedText;
 
 const langOf = (code: string): string => code.toLowerCase().split(/[-_]/)[0];

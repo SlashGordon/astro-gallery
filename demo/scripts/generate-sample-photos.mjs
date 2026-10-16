@@ -34,7 +34,7 @@ try {
 } catch {
   console.warn(
     '[samples] `sharp` is not installed — skipping sample generation.\n' +
-      `          Run \`npm install\` in demo/, or add your own photos to ${OUT_DIR}`,
+      `          Run \`npm install\` in demo/ or add your own photos to ${OUT_DIR}`,
   );
   process.exit(0);
 }

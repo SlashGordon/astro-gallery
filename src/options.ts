@@ -46,11 +46,11 @@ export interface MapOptions {
   consent?: boolean;
   /** `localStorage` key used to remember the visitor's consent choice. */
   consentKey?: string;
-  /** Heading rendered on the consent gate. String, or a per-locale dictionary. */
+  /** Heading rendered on the consent gate. String or a per-locale dictionary. */
   consentTitle?: MaybeLocalized;
-  /** Body copy for the consent gate. HTML is allowed. String, or a per-locale dictionary. */
+  /** Body copy for the consent gate. HTML is allowed. String or a per-locale dictionary. */
   consentText?: MaybeLocalized;
-  /** Label of the "load the map" button. String, or a per-locale dictionary. */
+  /** Label of the "load the map" button. String or a per-locale dictionary. */
   consentButtonLabel?: MaybeLocalized;
 }
 
@@ -86,7 +86,7 @@ export interface GalleryUserOptions {
   imageFormat?: 'webp' | 'avif' | 'jpeg' | 'png';
   /**
    * Label used for photos that carry no EXIF date. Default `"Undated"`.
-   * String, or a per-locale dictionary resolved against the component's `locale`.
+   * String or a per-locale dictionary resolved against the component's `locale`.
    */
   undatedLabel?: MaybeLocalized;
   /**

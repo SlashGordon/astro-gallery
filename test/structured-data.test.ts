@@ -32,7 +32,7 @@ describe('imageGalleryJsonLd', () => {
     expect(doc.associatedMedia[1].caption).toBe('A longer caption for B');
   });
 
-  it('omits caption when it equals the name, and drops entries without a contentUrl', () => {
+  it('omits caption when it equals the name and drops entries without a contentUrl', () => {
     const doc = JSON.parse(
       imageGalleryJsonLd([
         { contentUrl: '/x.webp', name: 'X', caption: 'X' },

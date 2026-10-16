@@ -5,8 +5,8 @@
 Folder-driven image galleries for [Astro](https://astro.build) — a justified
 layout, a responsive grid with an optional masonry variant, an editorial
 reader, a glass-caption slideshow, a fanned-print carousel, an EXIF-date
-timeline, and a GDPR-friendly photo map. Every image goes through
-`astro:assets` (optimised, correctly-sized `webp`/`avif` with `srcset`), and
+timeline and a GDPR-friendly photo map. Every image goes through
+`astro:assets` (optimised, correctly-sized `webp`/`avif` with `srcset`) and
 every component ships semantic HTML, native lazy loading, resolved `alt` text
 and `ImageGallery` JSON-LD out of the box.
 
@@ -25,10 +25,10 @@ Point a component at a folder in `src/`, drop your photos in, done:
 | Component          | What it does                                                                                                                                                                                             |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `JustifiedGallery` | Aspect-ratio-aware rows that fill the width edge-to-edge (Flickr/Unsplash style). Responsive `srcset`, blur-up skeletons, `content-visibility`, JSON-LD. Zero layout JS.                                 |
-| `ImageGallery`     | Uniform responsive CSS grid, click to open a lightbox with arrow-key navigation. A scroll-triggered entrance, a zoom-in affordance, and an opt-in `variant="masonry"` that keeps each photo's own ratio. |
+| `ImageGallery`     | Uniform responsive CSS grid, click to open a lightbox with arrow-key navigation. A scroll-triggered entrance, a zoom-in affordance and an opt-in `variant="masonry"` that keeps each photo's own ratio. |
 | `EditorialGallery` | The justified layout with a two-pane fullscreen reader: photo left, caption panel right (title, caption, date, camera, place, pixel size), filmstrip, collapsible panel.                                 |
 | `SlideshowGallery` | One photo at a time on a translate-driven track, with a glassmorphism caption card that rises on hover or focus. Pointer drag, keyboard, dots, optional autoplay with a pause control.                   |
-| `CarouselGallery`  | A fanned stack of prints: the centre photo full-size, neighbours peeking in perspective. Click a peek, drag, or use the arrows; the caption docks below the stage instead of riding on the photo.        |
+| `CarouselGallery`  | A fanned stack of prints: the centre photo full-size, neighbours peeking in perspective. Click a peek, drag or use the arrows; the caption docks below the stage instead of riding on the photo.        |
 | `ImageTimeline`    | Reads each photo's EXIF capture date, groups by day and lays the days out on a timeline — a horizontal scrolling rail or a vertical spine (`<ol>` + `<time>`). Optional reverse-geocoded location label. |
 | `MapGallery`       | Reads GPS EXIF, drops a circular photo marker per location on a Leaflet map. Consent gate, so no external tile request happens before the visitor agrees; crawlable fallback.                            |
 
@@ -103,7 +103,7 @@ In MDX the same imports work at the top of the file.
 The modern one. Rows are justified to the container width using each image's
 aspect ratio, so nothing is cropped to a fixed grid cell. Built for Core Web
 Vitals: `srcset`/`sizes`, intrinsic `width`/`height` (no CLS), `content-visibility`
-to skip offscreen work, blur-up skeletons, and the first images marked
+to skip offscreen work, blur-up skeletons and the first images marked
 `fetchpriority="high"`.
 
 ![JustifiedGallery — aspect-ratio-aware rows filling the container width](docs/screenshots/justified-gallery.jpg)
@@ -128,7 +128,7 @@ to skip offscreen work, blur-up skeletons, and the first images marked
 | `lightbox`       | `boolean`                   | `true`               | Open images in the built-in lightbox.                                |
 | `alt`            | `Record<string,string>`     | `{}`                 | Per-file `alt` overrides (folder mode), keyed by file name.          |
 | `captions`       | `Record<string,string>`     | `{}`                 | Per-file caption overrides (folder mode).                            |
-| `album`          | `string`                    | –                    | Accessible label, fallback `alt`, and JSON-LD `name`.                |
+| `album`          | `string`                    | –                    | Accessible label, fallback `alt` and JSON-LD `name`.                |
 | `sizes`          | `string`                    | `1–3 col responsive` | `<img sizes>` attribute.                                             |
 | `structuredData` | `boolean`                   | integration setting  | Emit `ImageGallery` JSON-LD.                                         |
 
@@ -136,15 +136,15 @@ to skip offscreen work, blur-up skeletons, and the first images marked
 
 ![ImageGallery — a uniform responsive grid with captions under each image](docs/screenshots/image-gallery.jpg)
 
-Click any image for the built-in lightbox — arrow keys, `Esc`, and the caption
+Click any image for the built-in lightbox — arrow keys, `Esc` and the caption
 carried through:
 
 ![The built-in lightbox showing a single photo with its caption](docs/screenshots/lightbox.jpg)
 
 Cells rise into place as they cross the viewport (one pass, skipped entirely
-under `prefers-reduced-motion`), and hovering or focusing a photo lifts it,
+under `prefers-reduced-motion`) and hovering or focusing a photo lifts it,
 scales the image and raises a zoom-in cue — a clearer affordance than
-`cursor: zoom-in` alone, and one that also shows up for keyboard focus.
+`cursor: zoom-in` alone and one that also shows up for keyboard focus.
 
 **Folder mode** — every image in `src/assets/images/trips/rome/`, sorted by
 filename (natural sort, so `2.jpg` before `10.jpg`):
@@ -155,9 +155,10 @@ filename (natural sort, so `2.jpg` before `10.jpg`):
 
 **`variant="masonry"`** keeps each photo's own aspect ratio instead of
 cropping every cell to the same rectangle, packing the columns tight
-(CSS Grid row-spans, `grid-auto-flow: dense` to backfill gaps — no JS layout
-pass). The caption moves to a hover scrim riding on the image, since there's
-no uniform cell to put a `<figcaption>` under:
+(CSS multi-column, so photos fill one column top to bottom before the next;
+no JS layout pass). The caption moves to a hover scrim riding on the image, since there's
+no uniform cell to put a `<figcaption>` under. Touch screens can't hover, so
+there the scrim stays on and the caption is cut to two lines:
 
 ```astro
 <ImageGallery folderPath="trips/rome" columns={4} variant="masonry" />
@@ -188,14 +189,14 @@ import sunrise from '../assets/sunrise.jpg';
 | `folderPath`     | `string`                    | –           | Folder relative to `src/<imagesDir>/`.                                              |
 | `images`         | `{ src, alt?, caption? }[]` | –           | Use instead of `folderPath`. `src` is an imported image, a `/public` path or a URL. |
 | `baseDir`        | `string`                    | `imagesDir` | Override the base folder for this instance.                                         |
-| `columns`        | `1 \| 2 \| 3 \| 4 \| 5`     | `3`         | Columns at the widest breakpoint (scales down responsively).                        |
+| `columns`        | `1 \| 2 \| 3 \| 4 \| 5`     | `3`         | Columns at the widest breakpoint. Phones get 2 (1 for `columns={1}`).               |
 | `variant`        | `'grid' \| 'masonry'`       | `'grid'`    | `'masonry'` keeps each photo's own ratio instead of cropping to a uniform cell.     |
 | `gap`            | `string`                    | `1rem`      | CSS gap between items.                                                              |
 | `loading`        | `'lazy' \| 'eager'`         | `'lazy'`    | `loading` for images after the first (the first is always `eager`).                 |
 | `lightbox`       | `boolean`                   | `true`      | `false` → thumbnails link straight to the full image.                               |
 | `alt`            | `Record<string,string>`     | `{}`        | Per-file `alt` overrides (folder mode), keyed by file name.                         |
 | `captions`       | `Record<string,string>`     | `{}`        | Per-file caption overrides (folder mode).                                           |
-| `album`          | `string`                    | –           | Accessible label, fallback `alt`, and JSON-LD `name`.                               |
+| `album`          | `string`                    | –           | Accessible label, fallback `alt` and JSON-LD `name`.                               |
 | `sizes`          | `string`                    | from cols   | `<img sizes>` attribute.                                                            |
 | `structuredData` | `boolean`                   | integ.      | Emit `ImageGallery` JSON-LD.                                                        |
 
@@ -222,12 +223,12 @@ photo, so the panel glass takes on the picture's colour.
 ```
 
 In the viewer: `←` / `→` and `Home` / `End` move, the filmstrip jumps, `Esc`
-closes, swipe works on touch, and the button in the panel header collapses the
+closes, swipe works on touch and the button in the panel header collapses the
 panel for a full-bleed view. Focus is trapped while it is open and restored to
 the thumbnail you came from. Below 900px the panel becomes a bottom sheet.
 
 Titles and captions fall back to embedded metadata when you do not pass an
-override — IPTC `ObjectName` / XMP `dc:title` for the title, and the same
+override — IPTC `ObjectName` / XMP `dc:title` for the title and the same
 description tags [`captions`](#captions) uses for the body. A photo with neither
 just shows its `alt` as the title.
 
@@ -285,7 +286,9 @@ starts fast and settles slowly.
 
 The caption is a glassmorphism card (`backdrop-filter: blur(22px) saturate(180%)`)
 inset from the stage, which floats up and fades in when you hover or focus the
-current slide.
+current slide. When the stage is narrower than 40rem (a container query, so it
+also applies in a narrow column on desktop), the caption docks below the photo
+instead, because a few lines of copy would otherwise cover the whole image.
 
 ![SlideshowGallery — a rounded stage with a glassmorphism caption card raised over the photo](docs/screenshots/slideshow-gallery.jpg)
 
@@ -302,7 +305,7 @@ current slide.
 Drag it with a pointer and the track follows 1:1, then settles on the same
 curve; a drag past 15% of the stage changes slide. `←` / `→` / `Home` / `End`
 work once the slideshow has focus, off-screen slides are `inert` (out of the
-tab order and the a11y tree), and a polite live region announces `"3 of 13"`.
+tab order and the a11y tree) and a polite live region announces `"3 of 13"`.
 
 | Prop                          | Type                                | Default             | Notes                                                                                                        |
 | ----------------------------- | ----------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -311,7 +314,7 @@ tab order and the a11y tree), and a polite live region announces `"3 of 13"`.
 | `aspectRatio`                 | `string`                            | `"16 / 10"`         | CSS aspect ratio for the stage.                                                                              |
 | `radius`                      | `string`                            | `"24px"`            | Corner radius of the stage.                                                                                  |
 | `fit`                         | `"cover" \| "contain"`              | `"cover"`           | `contain` shows the whole frame and fills the letterbox with a blurred copy — use it for mixed orientations. |
-| `captionMode`                 | `"hover" \| "always" \| "none"`     | `"hover"`           | When the glass card shows. Always visible on touch.                                                          |
+| `captionMode`                 | `"hover" \| "always" \| "none"`     | `"hover"`           | When the glass card shows. Always visible on touch. Below 40rem both modes dock it under the photo.          |
 | `autoplay`                    | `boolean`                           | `false`             | Adds a pause control. Never starts under reduced motion.                                                     |
 | `interval`                    | `number`                            | `6000`              | Autoplay delay in ms (min 1500).                                                                             |
 | `loop`                        | `boolean`                           | `true`              | Wrap past the ends. `false` disables the arrows at the extremes.                                             |
@@ -332,14 +335,14 @@ Retheme through the custom properties on `.asg-slides`: `--asg-slides-duration`,
 `--asg-slides-chip-hover`.
 
 Under `prefers-reduced-motion` the track transition, the card's rise and the
-control hover transforms are all dropped, and autoplay never starts.
+control hover transforms are all dropped and autoplay never starts.
 
 ### `CarouselGallery`
 
 A fanned stack of prints rather than a single full-bleed frame: the centre
 photo sits at full size, its neighbours peek at the edges — scaled down,
 dimmed and tilted in perspective by how far they sit from the centre. Click a
-peeking print, drag, or use the arrows to bring it forward.
+peeking print, drag or use the arrows to bring it forward.
 
 The caption docks in its own strip below the stage and crossfades as the
 centre print changes, instead of riding on the photo the way
@@ -409,7 +412,7 @@ the days out on a rail you scroll sideways:
 | `baseDir`      | `string`                     | `imagesDir`          | Override the base folder.                                     |
 | `locale`       | `string`                     | integration `locale` | Date-label locale.                                            |
 | `maxPerGroup`  | `number`                     | `4`                  | Thumbnails per day before a `+N` tile.                        |
-| `orientation`  | `'horizontal' \| 'vertical'` | `'horizontal'`       | Horizontal scrolling rail, or a vertical spine down the page. |
+| `orientation`  | `'horizontal' \| 'vertical'` | `'horizontal'`       | Horizontal scrolling rail or a vertical spine down the page. |
 | `geocode`      | `boolean`                    | integration setting  | Reverse-geocode one location label per day.                   |
 | `scrollHint`   | `string \| LocalizedText`    | `'Scroll for more'`  | Hint under a **horizontal** timeline; `""` hides it.          |
 | `undatedLabel` | `string \| LocalizedText`    | integration setting  | Label for the trailing group of dateless photos.              |
@@ -440,7 +443,7 @@ the component renders nothing.
 | `locale`                                              | `string`                  | integration `locale`        | Popup date locale.                                       |
 | `geocode`                                             | `boolean`                 | integration setting         | Reverse-geocode a label per marker.                      |
 | `basemap`                                             | `BasemapId`               | `'osm'`                     | Named tile preset (see below).                           |
-| `scheme`                                              | `'auto'\|'light'\|'dark'` | `'auto'`                    | Force the control chrome light/dark, or follow the page. |
+| `scheme`                                              | `'auto'\|'light'\|'dark'` | `'auto'`                    | Force the control chrome light/dark or follow the page. |
 | `tileUrl`                                             | `string`                  | from `basemap`              | Leaflet XYZ tile template; overrides `basemap`.          |
 | `tileAttribution`                                     | `string`                  | from `basemap`              | Attribution HTML.                                        |
 | `tileApiKey`                                          | `string`                  | –                           | Key appended to tile requests (CARTO, Stadia…).          |
@@ -498,7 +501,7 @@ gallery({
 
 The preset also sets `scheme` (`"light"` / `"dark"`) so the popups, zoom buttons
 and attribution match the tiles even on a page with the opposite theme. Override
-with the `scheme` prop, or `"auto"` to follow the page.
+with the `scheme` prop or `"auto"` to follow the page.
 
 #### Custom tile providers & API keys
 
@@ -541,10 +544,11 @@ For a custom `tileUrl`, allow that provider's tile host.
 
 Captions render as a `<figcaption>` — always visible under the photo in
 `ImageGallery`'s default grid, revealed on hover/focus in `JustifiedGallery`,
-`EditorialGallery` and `ImageGallery`'s `variant="masonry"` — and also feed the
+`EditorialGallery` and `ImageGallery`'s `variant="masonry"` (on touch screens
+these show a shortened label instead) — and also feed the
 lightbox caption and the JSON-LD `caption`. In `EditorialGallery` the caption
 is the panel's body text; in `SlideshowGallery` it's the glass card that rises
-over the photo; in `CarouselGallery` it's a docked strip below the stage that
+over the photo or a strip below it on a narrow stage; in `CarouselGallery` it's a docked strip below the stage that
 crossfades as the centre print changes. Three ways to set them:
 
 **Folder mode — the `captions` prop** (`JustifiedGallery`, `ImageGallery`,
@@ -574,14 +578,15 @@ name_ → caption; files you omit have none:
 
 **Embedded in the file.** `JustifiedGallery` (folder mode) falls back to an
 image's own IPTC / XMP caption when it has one and it differs from the `alt`.
-Set it with any photo app's _Caption_ field, or exiftool:
+Set it with any photo app's _Caption_ field or exiftool:
 
 ```bash
 exiftool -IPTC:Caption-Abstract="Golden hour from the Gianicolo hill" 09-sunset.jpg
 ```
 
 The `captions` prop always wins over an embedded caption. `JustifiedGallery`
-captions are hidden until hover/focus — to always show them, add
+captions are hidden until hover/focus on devices with a mouse (touch screens
+show them cut to two lines) — to always show them, add
 `.asg-jgallery__caption { opacity: 1 }` to your CSS.
 
 `ImageTimeline` and `MapGallery` don't take per-photo captions; they show the
@@ -733,7 +738,7 @@ photo N"`. Name your files well or pass `alt={{ 'file.jpg': '…' }}` and you ge
   `associatedMedia` is a list of `ImageObject`s (`contentUrl`, `thumbnailUrl`,
   `name`, `caption`, `width`, `height`). Relative URLs become absolute when
   `site` is set in `astro.config`. Disable globally with
-  `structuredData: false`, or per component with the `structuredData` prop.
+  `structuredData: false` or per component with the `structuredData` prop.
 - **`MapGallery` stays indexable.** The photos live in an SSR `<ul>` of linked
   thumbnails inside the map container; the client script swaps in the Leaflet
   map (and removes that list) only after consent. No-JS visitors and crawlers
@@ -789,4 +794,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md). There is a runnable playground in
 If this package saves you time, consider buying me a coffee — it keeps the
 maintenance going.
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-SlashGordon-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/SlashGordon)
+<a href="https://buymeacoffee.com/SlashGordon"><img src=".github/assets/buymeacoffee-badge.svg" alt="Buy Me A Coffee" width="180"></a>

@@ -34,7 +34,7 @@ function absolutize(url: string, site?: string | URL): string {
 
 /**
  * Build an `ImageGallery` node whose `associatedMedia` is a list of
- * `ImageObject`s. Returns a compact JSON string, or `""` when there is nothing
+ * `ImageObject`s. Returns a compact JSON string or `""` when there is nothing
  * worth emitting.
  */
 export function imageGalleryJsonLd(images: LdImage[], options: GalleryLdOptions = {}): string {

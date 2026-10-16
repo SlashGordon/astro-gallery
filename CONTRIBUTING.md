@@ -45,7 +45,7 @@ test/                  # Vitest unit tests for the pure helpers
 The `.astro` components are **not** bundled — they ship as source so the
 consumer's Astro/Vite pipeline compiles them with `astro:assets`,
 `import.meta.glob` and the `virtual:astro-gallery/config` module available. Keep
-anything that needs those three inside `.astro` frontmatter, and keep pure logic
+anything that needs those three inside `.astro` frontmatter and keep pure logic
 in `src/internal/` where it can be unit-tested.
 
 ## Before opening a PR

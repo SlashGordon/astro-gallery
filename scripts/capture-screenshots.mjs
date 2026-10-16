@@ -36,11 +36,15 @@ async function ensureServer() {
   if (reachable) return null;
 
   console.log('starting astro preview…');
-  const child = spawn('npx', ['astro', 'preview', '--port', new URL(URL).port || '4331'], {
-    cwd: 'demo',
-    stdio: 'ignore',
-    detached: false,
-  });
+  const child = spawn(
+    'npx',
+    ['astro', 'preview', '--port', new globalThis.URL(URL).port || '4331'],
+    {
+      cwd: 'demo',
+      stdio: 'ignore',
+      detached: false,
+    },
+  );
   for (let i = 0; i < 40; i++) {
     await new Promise((r) => setTimeout(r, 500));
     if (
