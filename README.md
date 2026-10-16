@@ -25,12 +25,13 @@ Point a component at a folder in `src/`, drop your photos in, done:
 | Component          | What it does                                                                                                                                                                                             |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `JustifiedGallery` | Aspect-ratio-aware rows that fill the width edge-to-edge (Flickr/Unsplash style). Responsive `srcset`, blur-up skeletons, `content-visibility`, JSON-LD. Zero layout JS.                                 |
-| `ImageGallery`     | Uniform responsive CSS grid, click to open a lightbox with arrow-key navigation. A scroll-triggered entrance, a zoom-in affordance and an opt-in `variant="masonry"` that keeps each photo's own ratio. |
+| `ImageGallery`     | Uniform responsive CSS grid, click to open a lightbox with arrow-key navigation. A scroll-triggered entrance, a zoom-in affordance and an opt-in `variant="masonry"` that keeps each photo's own ratio.  |
 | `EditorialGallery` | The justified layout with a two-pane fullscreen reader: photo left, caption panel right (title, caption, date, camera, place, pixel size), filmstrip, collapsible panel.                                 |
 | `SlideshowGallery` | One photo at a time on a translate-driven track, with a glassmorphism caption card that rises on hover or focus. Pointer drag, keyboard, dots, optional autoplay with a pause control.                   |
-| `CarouselGallery`  | A fanned stack of prints: the centre photo full-size, neighbours peeking in perspective. Click a peek, drag or use the arrows; the caption docks below the stage instead of riding on the photo.        |
+| `CarouselGallery`  | A fanned stack of prints: the centre photo full-size, neighbours peeking in perspective. Click a peek, drag or use the arrows; the caption docks below the stage instead of riding on the photo.         |
 | `ImageTimeline`    | Reads each photo's EXIF capture date, groups by day and lays the days out on a timeline — a horizontal scrolling rail or a vertical spine (`<ol>` + `<time>`). Optional reverse-geocoded location label. |
 | `MapGallery`       | Reads GPS EXIF, drops a circular photo marker per location on a Leaflet map. Consent gate, so no external tile request happens before the visitor agrees; crawlable fallback.                            |
+| `Expedition`       | A whole brutalist travel publication from one data object: hero, chapters composed as asymmetric spreads, interludes, closing sequence, modal viewer. See [Expedition](#expedition).                     |
 
 ---
 
@@ -128,7 +129,7 @@ to skip offscreen work, blur-up skeletons and the first images marked
 | `lightbox`       | `boolean`                   | `true`               | Open images in the built-in lightbox.                                |
 | `alt`            | `Record<string,string>`     | `{}`                 | Per-file `alt` overrides (folder mode), keyed by file name.          |
 | `captions`       | `Record<string,string>`     | `{}`                 | Per-file caption overrides (folder mode).                            |
-| `album`          | `string`                    | –                    | Accessible label, fallback `alt` and JSON-LD `name`.                |
+| `album`          | `string`                    | –                    | Accessible label, fallback `alt` and JSON-LD `name`.                 |
 | `sizes`          | `string`                    | `1–3 col responsive` | `<img sizes>` attribute.                                             |
 | `structuredData` | `boolean`                   | integration setting  | Emit `ImageGallery` JSON-LD.                                         |
 
@@ -196,7 +197,7 @@ import sunrise from '../assets/sunrise.jpg';
 | `lightbox`       | `boolean`                   | `true`      | `false` → thumbnails link straight to the full image.                               |
 | `alt`            | `Record<string,string>`     | `{}`        | Per-file `alt` overrides (folder mode), keyed by file name.                         |
 | `captions`       | `Record<string,string>`     | `{}`        | Per-file caption overrides (folder mode).                                           |
-| `album`          | `string`                    | –           | Accessible label, fallback `alt` and JSON-LD `name`.                               |
+| `album`          | `string`                    | –           | Accessible label, fallback `alt` and JSON-LD `name`.                                |
 | `sizes`          | `string`                    | from cols   | `<img sizes>` attribute.                                                            |
 | `structuredData` | `boolean`                   | integ.      | Emit `ImageGallery` JSON-LD.                                                        |
 
@@ -406,18 +407,18 @@ the days out on a rail you scroll sideways:
 <ImageTimeline folderPath="trips/rome" orientation="vertical" />
 ```
 
-| Prop           | Type                         | Default              | Notes                                                         |
-| -------------- | ---------------------------- | -------------------- | ------------------------------------------------------------- |
-| `folderPath`   | `string`                     | – (required)         | Folder relative to `src/<imagesDir>/`.                        |
-| `baseDir`      | `string`                     | `imagesDir`          | Override the base folder.                                     |
-| `locale`       | `string`                     | integration `locale` | Date-label locale.                                            |
-| `maxPerGroup`  | `number`                     | `4`                  | Thumbnails per day before a `+N` tile.                        |
+| Prop           | Type                         | Default              | Notes                                                        |
+| -------------- | ---------------------------- | -------------------- | ------------------------------------------------------------ |
+| `folderPath`   | `string`                     | – (required)         | Folder relative to `src/<imagesDir>/`.                       |
+| `baseDir`      | `string`                     | `imagesDir`          | Override the base folder.                                    |
+| `locale`       | `string`                     | integration `locale` | Date-label locale.                                           |
+| `maxPerGroup`  | `number`                     | `4`                  | Thumbnails per day before a `+N` tile.                       |
 | `orientation`  | `'horizontal' \| 'vertical'` | `'horizontal'`       | Horizontal scrolling rail or a vertical spine down the page. |
-| `geocode`      | `boolean`                    | integration setting  | Reverse-geocode one location label per day.                   |
-| `scrollHint`   | `string \| LocalizedText`    | `'Scroll for more'`  | Hint under a **horizontal** timeline; `""` hides it.          |
-| `undatedLabel` | `string \| LocalizedText`    | integration setting  | Label for the trailing group of dateless photos.              |
-| `alt`          | `Record<string,string>`      | `{}`                 | Per-file `alt` overrides, keyed by file name.                 |
-| `album`        | `string`                     | –                    | Accessible label and fallback `alt`.                          |
+| `geocode`      | `boolean`                    | integration setting  | Reverse-geocode one location label per day.                  |
+| `scrollHint`   | `string \| LocalizedText`    | `'Scroll for more'`  | Hint under a **horizontal** timeline; `""` hides it.         |
+| `undatedLabel` | `string \| LocalizedText`    | integration setting  | Label for the trailing group of dateless photos.             |
+| `alt`          | `Record<string,string>`      | `{}`                 | Per-file `alt` overrides, keyed by file name.                |
+| `album`        | `string`                     | –                    | Accessible label and fallback `alt`.                         |
 
 Photos with no EXIF date collapse into a single trailing group (label
 configurable via the integration's `undatedLabel`).
@@ -436,24 +437,24 @@ clicking it zooms to the group.
 Images without GPS EXIF are silently skipped; if none of the photos have GPS
 the component renders nothing.
 
-| Prop                                                  | Type                      | Default                     | Notes                                                    |
-| ----------------------------------------------------- | ------------------------- | --------------------------- | -------------------------------------------------------- |
-| `folderPath`                                          | `string`                  | – (required)                | Folder relative to `src/<imagesDir>/`.                   |
-| `baseDir`                                             | `string`                  | `imagesDir`                 | Override the base folder.                                |
-| `locale`                                              | `string`                  | integration `locale`        | Popup date locale.                                       |
-| `geocode`                                             | `boolean`                 | integration setting         | Reverse-geocode a label per marker.                      |
-| `basemap`                                             | `BasemapId`               | `'osm'`                     | Named tile preset (see below).                           |
+| Prop                                                  | Type                      | Default                     | Notes                                                   |
+| ----------------------------------------------------- | ------------------------- | --------------------------- | ------------------------------------------------------- |
+| `folderPath`                                          | `string`                  | – (required)                | Folder relative to `src/<imagesDir>/`.                  |
+| `baseDir`                                             | `string`                  | `imagesDir`                 | Override the base folder.                               |
+| `locale`                                              | `string`                  | integration `locale`        | Popup date locale.                                      |
+| `geocode`                                             | `boolean`                 | integration setting         | Reverse-geocode a label per marker.                     |
+| `basemap`                                             | `BasemapId`               | `'osm'`                     | Named tile preset (see below).                          |
 | `scheme`                                              | `'auto'\|'light'\|'dark'` | `'auto'`                    | Force the control chrome light/dark or follow the page. |
-| `tileUrl`                                             | `string`                  | from `basemap`              | Leaflet XYZ tile template; overrides `basemap`.          |
-| `tileAttribution`                                     | `string`                  | from `basemap`              | Attribution HTML.                                        |
-| `tileApiKey`                                          | `string`                  | –                           | Key appended to tile requests (CARTO, Stadia…).          |
-| `tileApiKeyParam`                                     | `string`                  | `api_key`                   | Query-param name for `tileApiKey`.                       |
-| `consent`                                             | `boolean`                 | `true`                      | Show the consent gate before loading tiles.              |
-| `consentKey`                                          | `string`                  | `astro-gallery:map-consent` | `localStorage` key for the choice.                       |
-| `consentTitle` / `consentText` / `consentButtonLabel` | `string \| LocalizedText` | English defaults            | Consent gate copy (`consentText` allows HTML).           |
-| `alt`                                                 | `Record<string,string>`   | `{}`                        | Per-file `alt` overrides, keyed by file name.            |
-| `album`                                               | `string`                  | –                           | Accessible label, fallback `alt`, JSON-LD name.          |
-| `structuredData`                                      | `boolean`                 | integration setting         | Emit `ImageGallery` JSON-LD.                             |
+| `tileUrl`                                             | `string`                  | from `basemap`              | Leaflet XYZ tile template; overrides `basemap`.         |
+| `tileAttribution`                                     | `string`                  | from `basemap`              | Attribution HTML.                                       |
+| `tileApiKey`                                          | `string`                  | –                           | Key appended to tile requests (CARTO, Stadia…).         |
+| `tileApiKeyParam`                                     | `string`                  | `api_key`                   | Query-param name for `tileApiKey`.                      |
+| `consent`                                             | `boolean`                 | `true`                      | Show the consent gate before loading tiles.             |
+| `consentKey`                                          | `string`                  | `astro-gallery:map-consent` | `localStorage` key for the choice.                      |
+| `consentTitle` / `consentText` / `consentButtonLabel` | `string \| LocalizedText` | English defaults            | Consent gate copy (`consentText` allows HTML).          |
+| `alt`                                                 | `Record<string,string>`   | `{}`                        | Per-file `alt` overrides, keyed by file name.           |
+| `album`                                               | `string`                  | –                           | Accessible label, fallback `alt`, JSON-LD name.         |
+| `structuredData`                                      | `boolean`                 | integration setting         | Emit `ImageGallery` JSON-LD.                            |
 
 Even with the map, an SSR-rendered `<ul>` of linked thumbnails (with `alt`,
 `width`/`height` and `loading="lazy"`) sits inside the container for crawlers and
@@ -537,6 +538,172 @@ fallback thumbnails, which are `astro:assets` output and covered by `'self'`):
 | `esri-satellite`  | `https://server.arcgisonline.com`                                 |
 
 For a custom `tileUrl`, allow that provider's tile host.
+
+---
+
+## Expedition
+
+A component family for a whole art-directed travel publication: an opening
+statement, destination chapters composed as asymmetric spreads, full-screen
+interludes between them, a closing sequence and a modal photo viewer. The
+design is brutalist and editorial: warm paper or near-black, one accent
+colour, condensed display type, an editorial serif and monospaced metadata
+such as `FRAME 004 / 010`. The demo has the full publication at `/expedition/`
+and one page per destination at `/expedition/<destination>/`, all built from
+one data file.
+
+![Expedition — the opening viewport: an oversized headline on solid slabs running across a beach photo](docs/screenshots/expedition.jpg)
+
+One data object drives the page. Keep it in its own file:
+
+```ts
+// src/data/trip.ts
+import type { ClosingData, HeroData, TravelChapter } from 'astro-gallery';
+import harbour from '../assets/images/lisbon/harbour.jpg';
+import tram from '../assets/images/lisbon/tram.jpg';
+
+export const hero: HeroData = {
+  headline: ['The world', "doesn't", 'fit in a grid.'],
+  introduction: 'Notes from the places that changed the way we see things.',
+  image: { src: harbour, alt: 'Fishing boats in Lisbon harbour at dawn', focus: '50% 60%' },
+};
+
+export const chapters: TravelChapter[] = [
+  {
+    id: 'lisbon',
+    title: 'Lisbon',
+    location: 'Lisbon, Portugal',
+    dates: 'May 2024',
+    route: ['Alfama', 'Baixa', 'Belém'],
+    introduction: 'A week of steep streets and yellow trams.',
+    images: [
+      { src: harbour, alt: '…', title: 'Harbour at dawn', layout: 'feature' },
+      { src: tram, alt: '…', title: 'Line 28', layout: 'portrait', focus: '40% 50%' },
+    ],
+  },
+  // A chapter can also read a folder: EXIF fills in dates and coordinates.
+  { id: 'porto', title: 'Porto', location: 'Porto, Portugal', folderPath: 'trips/porto' },
+];
+
+export const closing: ClosingData = {
+  statement: ['The next story', 'is out there.'],
+  links: [{ label: 'Lisbon', href: '#lisbon', meta: 'May 2024' }],
+};
+```
+
+```astro
+---
+import Expedition from 'astro-gallery/components/expedition/Expedition.astro';
+import { chapters, closing, hero } from '../data/trip';
+---
+
+<html lang="en">
+  <body>
+    <Expedition brand="Field notes" hero={hero} chapters={chapters} closing={closing} />
+  </body>
+</html>
+```
+
+For a page per destination, pass a single chapter to `chapters` and set its
+`number`, so it keeps its place in the series (`CHAPTER 02`). The demo builds
+these pages from the same data with `getStaticPaths`.
+
+Render `Expedition` as the page's body content. It brings its own `<main>`,
+navigation, colours and fonts, and expects the full viewport width.
+
+### Composition
+
+Each photo's `layout` decides its weight and crop in the spread, not a card
+style:
+
+| `layout`    | Role                                                                         |
+| ----------- | ---------------------------------------------------------------------------- |
+| `feature`   | The dominant photo of a spread, natural ratio.                               |
+| `landscape` | A supporting horizontal frame, cropped to 3:2.                               |
+| `portrait`  | A narrow vertical frame, cropped to 4:5.                                     |
+| `panorama`  | Full width, cropped to 21:9 (16:10 on phones), or its own ratio if wider.    |
+| `compact`   | A small documentary frame, natural ratio. Runs of up to four form a cluster. |
+
+Leave `layout` out and it is picked from the aspect ratio (wide photos become
+panoramas, tall ones portraits) and a fixed rhythm for everything else.
+
+On desktop, consecutive photos form spreads on a 12-column grid: a feature
+with a portrait or compact dropped over its far corner, two landscapes
+sharing a column, a portrait beside a landscape, a staggered cluster of
+compacts. Spreads alternate sides, and `mirror: true` starts a chapter on the
+right. Where a frame is overlapped, its caption moves to the other edge, so
+an overlap never covers text. Tablets get a 6-column grid without overlaps;
+phones get one column, with compacts in pairs and features running edge to
+edge. The DOM order is always the reading order.
+
+`composition: 'sequence'` turns a chapter into a horizontal strip instead:
+the photos keep their natural ratio, snap into place and come with
+previous/next buttons and a counter. The rest of the page scrolls normally.
+
+`focus` sets the crop's focal point (`object-position`); `focusMobile`
+overrides it below 640px. `heading` sets an editorial heading that cuts into
+the top edge of a `feature` or `panorama`.
+
+![An Expedition spread: a portrait dropped over the corner of a feature photo, captions on opposite edges](docs/screenshots/expedition-spread.jpg)
+
+### Components
+
+`Expedition` composes all of these. Each one also works on its own, with the
+same data types.
+
+| Component            | What it renders                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| `GalleryHero`        | The opening viewport: headline on solid slabs over the photo, intro, scroll cue.     |
+| `GalleryChapter`     | Chapter number, destination, dates, dotted route, introduction and the photos.       |
+| `BrutalistImageGrid` | The asymmetric spreads of one chapter.                                               |
+| `TravelImage`        | One photo with its frame number, location, date and title.                           |
+| `PanoramicInterlude` | A near-full-screen photo with a short statement, between chapters.                   |
+| `GalleryFooter`      | The closing photo, statement, onward links and a one-line colophon.                  |
+| `GalleryNavigation`  | A compact top bar that hides while reading down. On phones a menu with the chapters. |
+| `GalleryProgress`    | A reading bar along the top and, on wide screens, a chapter index in the margin.     |
+| `ImageViewer`        | The modal viewer for every `TravelImage` on the page.                                |
+
+| `Expedition` prop | Type                          | Default               | Notes                                                                           |
+| ----------------- | ----------------------------- | --------------------- | ------------------------------------------------------------------------------- |
+| `hero`            | `HeroData`                    | –                     | `headline`, `introduction`, `image`, `kicker`.                                  |
+| `chapters`        | `TravelChapter[]`             | –                     | Explicit `images` or `folderPath` (with per-file `overrides`).                  |
+| `interludes`      | `InterludeData[]`             | `[]`                  | `after: '<chapter id>'` places one; without it they fill chapter gaps in order. |
+| `closing`         | `ClosingData`                 | –                     | `statement`, `image`, `links`, `colophon`.                                      |
+| `navigation`      | `NavLink[]`                   | Gallery, Destinations | E.g. Gallery, Destinations, Stories, About.                                     |
+| `brand`           | `string`                      | –                     | Publication name in the bar.                                                    |
+| `theme`           | `'light' \| 'dark' \| 'auto'` | `'auto'`              | `auto` follows the visitor's colour scheme.                                     |
+| `accent`          | `'signal' \| 'lime'`          | `'signal'`            | Orange-red or electric lime.                                                    |
+| `progress`        | `boolean`                     | `true`                | Reading bar and chapter index.                                                  |
+| `labels`          | `ExpeditionLabelOptions`      | English               | Every control and screen-reader string; each may be per-locale.                 |
+
+### Motion, viewer and fallbacks
+
+- Frames below the fold rise in as they enter the viewport
+  (`IntersectionObserver`); anything on screen when the script runs is never
+  hidden, so nothing flashes and nothing stays hidden if the script fails.
+  Chapter headers draw their rule across before the title rises.
+- Where the browser supports scroll-driven animations, features and panoramas
+  open up from a tighter crop as they scroll in, and interlude photos drift
+  slightly. These are pure CSS; no JavaScript runs per frame.
+- `prefers-reduced-motion: reduce` removes the reveals, the crop and the
+  drift. The layout and the content stay the same.
+- The viewer is a modal `<dialog>`: arrow keys, swipe left/right, swipe down
+  or `Esc` to close, neighbours preloaded, and focus returns to the photo that
+  opened it. Previous/next runs across chapters.
+- Without JavaScript every photo links to its full image and the phone menu
+  still opens (it is a `<details>` element).
+- The hero photo is the only eager, high-priority image. Every other photo is
+  lazy, with intrinsic dimensions and a `sizes` value that matches the column
+  it lands in.
+
+### Theming
+
+Override the custom properties on `.asg-exp`, e.g. `--asg-exp-bg`,
+`--asg-exp-ink`, `--asg-exp-muted`, `--asg-exp-accent` (large type and marks)
+and `--asg-exp-accent-ink` (small accent text, which needs 4.5:1). The type
+roles are system font stacks, so nothing is downloaded and fonts never shift
+the layout. To use your own faces, load them and set
+`--asg-exp-font-display`, `--asg-exp-font-text` and `--asg-exp-font-mono`.
 
 ---
 

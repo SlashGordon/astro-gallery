@@ -1,0 +1,147 @@
+---
+/**
+ * One photograph in an expedition: a link to the full image (the viewer
+ * intercepts it when JavaScript runs), a caption that never depends on hover,
+ * and the CSS custom properties `BrutalistImageGrid` uses to place it.
+ */
+import type { Placement } from '../../internal/expedition/layout.js';
+import { TABLET_SPAN, frameLabel, sizesFor } from '../../internal/expedition/layout.js';
+import type { ResolvedTravelImage } from '../../internal/expedition/types.js';
+import '../../styles/expedition.css';
+
+interface Props {
+  image: ResolvedTravelImage;
+  /** Frames in the whole expedition, for the `FRAME 014 / 086` label. */
+  total: number;
+  /** Desktop position from the composition engine (grid mode). */
+  placement?: Placement;
+  /** `"sequence"` sizes the frame by height for a horizontal strip. */
+  variant?: 'grid' | 'sequence';
+  /** Load eagerly with high priority (the first frames of the page). */
+  eager?: boolean;
+  /** Position within its spread; staggers the reveal. */
+  delay?: number;
+  /** `<img sizes>` override. */
+  sizes?: string;
+  /** Accessible name for a link around a decorative (`alt=""`) photo. */
+  openLabel?: string;
+  /** Word in front of the frame number. */
+  frameWord?: string;
+}
+
+const {
+  image,
+  total,
+  placement,
+  variant = 'grid',
+  eager = false,
+  delay = 0,
+  sizes: sizesProp,
+  openLabel = 'Open photo',
+  frameWord = 'Frame',
+} = Astro.props;
+
+const nat = image.aspectRatio || 1.5;
+const RATIO: Record<ResolvedTravelImage['layout'], number> = {
+  feature: nat,
+  landscape: 3 / 2,
+  portrait: 4 / 5,
+  panorama: Math.max(nat, 21 / 9),
+  compact: nat,
+};
+const RATIO_SMALL: Record<ResolvedTravelImage['layout'], number> = {
+  ...RATIO,
+  panorama: Math.max(nat, 16 / 10),
+};
+
+const frame = frameLabel(image.frame, total);
+const showText = variant === 'grid' && ['feature', 'landscape', 'panorama'].includes(image.layout);
+const meta = [image.location, image.date].filter(Boolean);
+
+const sizes =
+  sizesProp ??
+  (variant === 'sequence'
+    ? `(min-width: 640px) calc(62vh * ${nat.toFixed(3)}), calc(54vh * ${nat.toFixed(3)})`
+    : placement
+      ? sizesFor(image.layout, placement)
+      : '100vw');
+
+const style = [
+  `--asg-exp-nat:${nat.toFixed(4)}`,
+  `--asg-exp-ar:${(variant === 'sequence' ? nat : RATIO[image.layout]).toFixed(4)}`,
+  `--asg-exp-ar-sm:${(variant === 'sequence' ? nat : RATIO_SMALL[image.layout]).toFixed(4)}`,
+  `--asg-exp-focus:${image.focus}`,
+  `--asg-exp-focus-sm:${image.focusMobile}`,
+  `--asg-exp-delay:${delay * 110}ms`,
+  `--asg-exp-tspan:${TABLET_SPAN[image.layout]}`,
+  placement && `--asg-exp-col:${placement.col[0]} / ${placement.col[1]}`,
+  placement && `--asg-exp-row:${placement.row}`,
+  placement && `--asg-exp-drop-n:${placement.drop}`,
+]
+  .filter(Boolean)
+  .join(';');
+---
+
+<figure
+  class:list={[
+    'asg-exp-frame',
+    `asg-exp-frame--${image.layout}`,
+    variant === 'sequence' && 'asg-exp-frame--seq',
+    placement?.lift && 'is-lift',
+  ]}
+  style={style}
+  data-side={placement?.side ?? 'start'}
+  data-caption={placement?.captionAlign ?? 'start'}
+  {...(variant === 'grid' ? { 'data-asg-exp-reveal': '' } : {})}
+>
+  {image.heading && variant === 'grid' && (
+    <p class="asg-exp-frame__heading asg-exp-display asg-exp-slab">
+      {image.heading.split('\n').map((line) => (
+        <span>{line}</span>
+      ))}
+    </p>
+  )}
+  <a
+    class="asg-exp-frame__media"
+    href={image.src}
+    aria-label={image.alt ? undefined : image.title || openLabel}
+    data-asg-exp-item
+    data-asg-exp-srcset={image.srcset || undefined}
+    data-asg-exp-width={image.width || undefined}
+    data-asg-exp-height={image.height || undefined}
+    data-asg-exp-title={image.title || undefined}
+    data-asg-exp-location={image.location || undefined}
+    data-asg-exp-date={image.date || undefined}
+    data-asg-exp-coords={image.coordinates || undefined}
+    data-asg-exp-caption={image.caption || undefined}
+    data-asg-exp-frame={`${frameWord} ${frame}`}
+  >
+    <img
+      src={image.src}
+      srcset={image.srcset || undefined}
+      sizes={image.srcset ? sizes : undefined}
+      width={image.width || undefined}
+      height={image.height || undefined}
+      alt={image.alt}
+      loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager ? 'high' : 'auto'}
+      decoding="async"
+    />
+    <span class="asg-exp-frame__chip asg-exp-mono" aria-hidden="true">
+      {frame.split(' / ')[0]}
+      {image.location && <> · {image.location}</>}
+    </span>
+  </a>
+  <figcaption class="asg-exp-frame__caption">
+    <p class="asg-exp-frame__meta asg-exp-mono">
+      <span>
+        {frameWord} {frame}
+      </span>
+      {meta.map((m, i) => (
+        <span class:list={[i === 0 && image.location && 'asg-exp-accent-text']}>{m}</span>
+      ))}
+    </p>
+    {image.title && <p class="asg-exp-frame__title">{image.title}</p>}
+    {showText && image.caption && <p class="asg-exp-frame__text">{image.caption}</p>}
+  </figcaption>
+</figure>

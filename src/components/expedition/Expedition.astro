@@ -1,0 +1,169 @@
+---
+/**
+ * A whole art-directed travel publication from one data object: navigation,
+ * reading progress, the opening statement, destination chapters with
+ * panoramic interludes between them, the closing sequence and the viewer.
+ *
+ * Render it as the page's body content. It brings its own `<main>`, its own
+ * colours and fonts, and expects the full viewport width.
+ */
+import type { ImageMetadata } from 'astro';
+import config from 'virtual:astro-gallery/config';
+import { resolveLabels, type ExpeditionLabelOptions } from '../../internal/expedition/labels.js';
+import {
+  expeditionWidths,
+  resolveChapters,
+  resolveSingle,
+} from '../../internal/expedition/resolve.js';
+import type {
+  ClosingData,
+  HeroData,
+  InterludeData,
+  NavLink,
+  TravelChapter,
+} from '../../internal/expedition/types.js';
+import GalleryChapter from './GalleryChapter.astro';
+import GalleryFooter from './GalleryFooter.astro';
+import GalleryHero from './GalleryHero.astro';
+import GalleryNavigation from './GalleryNavigation.astro';
+import GalleryProgress from './GalleryProgress.astro';
+import ImageViewer from './ImageViewer.astro';
+import PanoramicInterlude from './PanoramicInterlude.astro';
+import '../../styles/expedition.css';
+
+interface Props {
+  /** Publication name in the navigation bar. */
+  brand?: string;
+  brandHref?: string;
+  hero: HeroData;
+  chapters: TravelChapter[];
+  /**
+   * Full-screen pauses. One with `after: "<chapter id>"` follows that chapter;
+   * one without follows the chapter at its own position (first after chapter 1).
+   */
+  interludes?: InterludeData[];
+  closing?: ClosingData;
+  /** Links in the navigation bar, e.g. Gallery, Destinations, Stories, About. */
+  navigation?: NavLink[];
+  /** `href` of the navigation link to mark as current. */
+  current?: string;
+  /** `"auto"` follows the visitor's colour scheme. Default `"auto"`. */
+  theme?: 'light' | 'dark' | 'auto';
+  /** The one accent colour. Default `"signal"` (orange-red). */
+  accent?: 'signal' | 'lime';
+  /** Show the reading progress and chapter index. Default `true`. */
+  progress?: boolean;
+  /** Override the integration's `imagesDir` (folder-mode chapters). */
+  baseDir?: string;
+  locale?: string;
+  labels?: ExpeditionLabelOptions;
+}
+
+const {
+  brand,
+  brandHref = '#top',
+  hero,
+  chapters: chapterData,
+  interludes = [],
+  closing,
+  navigation,
+  current,
+  theme = 'auto',
+  accent = 'signal',
+  progress = true,
+  baseDir = config.imagesDir,
+  locale = config.locale,
+  labels: labelsProp,
+} = Astro.props;
+
+const labels = resolveLabels(labelsProp, locale);
+
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/**/*.{jpg,jpeg,png,webp,avif,gif,tiff,JPG,JPEG,PNG,WEBP,AVIF,GIF,TIFF}',
+  { eager: true },
+);
+const ctx = {
+  glob: allImages,
+  baseDir,
+  widths: expeditionWidths(config.responsiveWidths),
+  format: config.imageFormat,
+  locale,
+};
+
+const { chapters, totalFrames } = await resolveChapters(chapterData, ctx);
+const [heroImage, closingImage, ...interludeImages] = await Promise.all([
+  resolveSingle(hero.image, ctx, 'hero'),
+  closing?.image ? resolveSingle(closing.image, ctx, 'closing') : Promise.resolve(undefined),
+  ...interludes.map((it, i) => resolveSingle(it.image, ctx, `interlude-${i + 1}`)),
+]);
+
+// Interludes without an explicit `after` fill the gaps in chapter order.
+const placedIds = new Set(interludes.map((it) => it.after).filter(Boolean));
+const freeSlots = chapters.map((c) => c.id).filter((id) => !placedIds.has(id));
+let nextFree = 0;
+const interludesAfter = new Map<string, number[]>();
+interludes.forEach((it, i) => {
+  const id = it.after ?? freeSlots[nextFree++];
+  if (!id) return;
+  interludesAfter.set(id, [...(interludesAfter.get(id) ?? []), i]);
+});
+
+const index = chapters.map((c) => ({ id: c.id, title: c.title, number: c.number }));
+const navLinks = navigation ?? [
+  ...(chapters[0] ? [{ label: 'Gallery', href: `#${chapters[0].id}` }] : []),
+  ...(closing?.links?.length ? [{ label: 'Destinations', href: '#destinations' }] : []),
+];
+---
+
+<div class="asg-exp" id="top" data-asg-exp-theme={theme} data-asg-exp-accent={accent}>
+  <a class="asg-exp-skip asg-exp-mono" href="#asg-exp-main">
+    {labels.skip}
+  </a>
+  <GalleryNavigation
+    brand={brand}
+    brandHref={brandHref}
+    links={navLinks}
+    chapters={index}
+    current={current}
+    locale={locale}
+    labels={labelsProp}
+  />
+  {progress && <GalleryProgress chapters={index} locale={locale} labels={labelsProp} />}
+
+  <main class="asg-exp-main" id="asg-exp-main" tabindex="-1">
+    <GalleryHero
+      headline={hero.headline}
+      introduction={hero.introduction}
+      kicker={hero.kicker}
+      image={heroImage}
+      scrollTo={chapters[0] ? `#${chapters[0].id}` : '#asg-exp-main'}
+      locale={locale}
+      labels={labelsProp}
+    />
+    {chapters.map((chapter) => (
+      <>
+        <GalleryChapter chapter={chapter} total={totalFrames} locale={locale} labels={labelsProp} />
+        {(interludesAfter.get(chapter.id) ?? []).map((i) => (
+          <PanoramicInterlude
+            statement={interludes[i]!.statement}
+            label={interludes[i]!.label}
+            image={interludeImages[i]!}
+            locale={locale}
+          />
+        ))}
+      </>
+    ))}
+    {closing && (
+      <GalleryFooter
+        statement={closing.statement}
+        image={closingImage}
+        links={closing.links}
+        colophon={closing.colophon}
+        locale={locale}
+        labels={labelsProp}
+      />
+    )}
+  </main>
+
+  <ImageViewer locale={locale} labels={labelsProp} />
+</div>

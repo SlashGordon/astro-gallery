@@ -1,0 +1,110 @@
+---
+/**
+ * The closing sequence: a last panoramic photograph, a concluding statement
+ * that cuts into it, and large links onward. A one-line colophon closes the
+ * page in the same type system instead of a generic site footer.
+ */
+import config from 'virtual:astro-gallery/config';
+import { toLines } from '../../internal/expedition/layout.js';
+import { resolveLabels, type ExpeditionLabelOptions } from '../../internal/expedition/labels.js';
+import { ensureResolved, expeditionWidths } from '../../internal/expedition/resolve.js';
+import type { NavLink, ResolvedTravelImage, TravelImage } from '../../internal/expedition/types.js';
+import '../../styles/expedition.css';
+
+interface Props {
+  statement: string | string[];
+  image?: TravelImage | ResolvedTravelImage;
+  /** Related destinations or stories. */
+  links?: NavLink[];
+  colophon?: string;
+  /** Anchor id of the links list, so navigation can point at it. Default `"destinations"`. */
+  linksId?: string;
+  /** Target of the back-to-top link. Default `"#top"`. */
+  topHref?: string;
+  locale?: string;
+  labels?: ExpeditionLabelOptions;
+}
+
+const {
+  statement,
+  image: input,
+  links = [],
+  colophon,
+  linksId = 'destinations',
+  topHref = '#top',
+  locale = config.locale,
+  labels: labelsProp,
+} = Astro.props;
+
+const labels = resolveLabels(labelsProp, locale);
+const image = input
+  ? await ensureResolved(
+      input,
+      { widths: expeditionWidths(config.responsiveWidths), format: config.imageFormat, locale },
+      'closing',
+    )
+  : null;
+const lines = toLines(statement);
+---
+
+<section
+  class:list={['asg-exp-closing', !image && 'asg-exp-closing--plain']}
+  aria-labelledby="asg-exp-closing-title"
+  data-asg-exp-progress-off
+>
+  {image && (
+    <div
+      class="asg-exp-closing__media"
+      style={`--asg-exp-focus:${image.focus};--asg-exp-focus-sm:${image.focusMobile}`}
+    >
+      <img
+        src={image.src}
+        srcset={image.srcset || undefined}
+        sizes={image.srcset ? '100vw' : undefined}
+        width={image.width || undefined}
+        height={image.height || undefined}
+        alt={image.alt}
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  )}
+  <h2
+    class="asg-exp-closing__title asg-exp-display asg-exp-slab"
+    id="asg-exp-closing-title"
+    data-asg-exp-reveal
+  >
+    {lines.map((line, i) => (
+      <span style={`--i:${i}`}>{line}</span>
+    ))}
+  </h2>
+
+  {links.length > 0 && (
+    <nav class="asg-exp-closing__next" id={linksId} aria-label={labels.continue}>
+      <p class="asg-exp-mono">{labels.continue}</p>
+      <ul>
+        {links.map((l) => (
+          <li>
+            <a href={l.href}>
+              <span class="asg-exp-closing__label asg-exp-display">{l.label}</span>
+              {l.meta && <span class="asg-exp-mono">{l.meta}</span>}
+              <span class="asg-exp-closing__arrow" aria-hidden="true">
+                →
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )}
+
+  <footer class="asg-exp-colophon asg-exp-mono">
+    {colophon && <p>{colophon}</p>}
+    <a href={topHref}>↑ {labels.backToTop}</a>
+  </footer>
+</section>
+
+<script>
+  import { initReveal, onPage } from '../../internal/expedition/client.js';
+  onPage(() => initReveal());
+</script>

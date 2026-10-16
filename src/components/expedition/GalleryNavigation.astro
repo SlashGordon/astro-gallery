@@ -1,0 +1,106 @@
+---
+/**
+ * A compact top bar: the publication name and a few links. It slides away
+ * while reading down and returns on the way up or when it holds focus. On
+ * phones the links fold into a `<details>` menu that also lists the chapters,
+ * so it opens without JavaScript.
+ */
+import config from 'virtual:astro-gallery/config';
+import { resolveLabels, type ExpeditionLabelOptions } from '../../internal/expedition/labels.js';
+import type { NavLink } from '../../internal/expedition/types.js';
+import '../../styles/expedition.css';
+
+interface Props {
+  /** Publication name in the bar. */
+  brand?: string;
+  brandHref?: string;
+  links?: NavLink[];
+  /** Chapters listed in the phone menu. */
+  chapters?: Array<{ id: string; title: string; number: number }>;
+  /** `href` of the link to mark as the current page. */
+  current?: string;
+  locale?: string;
+  labels?: ExpeditionLabelOptions;
+}
+
+const {
+  brand = 'Expedition',
+  brandHref = '#',
+  links = [],
+  chapters = [],
+  current,
+  locale = config.locale,
+  labels: labelsProp,
+} = Astro.props;
+
+const labels = resolveLabels(labelsProp, locale);
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<header class="asg-exp-nav" data-asg-exp-nav>
+  <a class="asg-exp-nav__brand asg-exp-mono" href={brandHref}>
+    {brand}
+  </a>
+
+  {links.length > 0 && (
+    <nav class="asg-exp-nav__links" aria-label={labels.navigation}>
+      <ul>
+        {links.map((l) => (
+          <li>
+            <a
+              class="asg-exp-mono"
+              href={l.href}
+              aria-current={l.href === current ? 'page' : undefined}
+            >
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )}
+
+  {(links.length > 0 || chapters.length > 0) && (
+    <details class="asg-exp-nav__menu">
+      <summary class="asg-exp-mono">{labels.menu}</summary>
+      <div class="asg-exp-nav__panel">
+        {links.length > 0 && (
+          <nav aria-label={labels.navigation}>
+            <ul class="asg-exp-nav__big">
+              {links.map((l) => (
+                <li>
+                  <a
+                    class="asg-exp-display"
+                    href={l.href}
+                    aria-current={l.href === current ? 'page' : undefined}
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+        {chapters.length > 0 && (
+          <nav aria-label={labels.chapters}>
+            <ol class="asg-exp-nav__chapters">
+              {chapters.map((c) => (
+                <li>
+                  <a href={`#${c.id}`}>
+                    <span class="asg-exp-mono asg-exp-accent-text">{pad(c.number)}</span>
+                    <span>{c.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )}
+      </div>
+    </details>
+  )}
+</header>
+
+<script>
+  import { initNavigation, onPage } from '../../internal/expedition/client.js';
+  onPage(() => initNavigation());
+</script>

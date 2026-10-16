@@ -1,0 +1,84 @@
+---
+/**
+ * The opening statement: a display headline set on solid slabs so it stays
+ * legible where it runs across the photograph, a short introduction and a
+ * scroll cue. The photo is the page's LCP element, so it loads eagerly with
+ * high priority and never fades in from transparent.
+ */
+import config from 'virtual:astro-gallery/config';
+import { toLines } from '../../internal/expedition/layout.js';
+import { resolveLabels, type ExpeditionLabelOptions } from '../../internal/expedition/labels.js';
+import { ensureResolved, expeditionWidths } from '../../internal/expedition/resolve.js';
+import type { ResolvedTravelImage, TravelImage } from '../../internal/expedition/types.js';
+import '../../styles/expedition.css';
+
+interface Props {
+  /** Each array entry (or `\n`-separated part) is one line. */
+  headline: string | string[];
+  introduction?: string;
+  image: TravelImage | ResolvedTravelImage;
+  /** Small utility label above the headline. */
+  kicker?: string;
+  /** Where the scroll cue leads, usually the first chapter. Default `"#asg-exp-main"`. */
+  scrollTo?: string;
+  locale?: string;
+  labels?: ExpeditionLabelOptions;
+}
+
+const {
+  headline,
+  introduction,
+  image: input,
+  kicker,
+  scrollTo = '#asg-exp-main',
+  locale = config.locale,
+  labels: labelsProp,
+} = Astro.props;
+
+const labels = resolveLabels(labelsProp, locale);
+const image = await ensureResolved(
+  input,
+  { widths: expeditionWidths(config.responsiveWidths), format: config.imageFormat, locale },
+  'hero',
+);
+const lines = toLines(headline);
+const facts = [image.location, image.coordinates].filter(Boolean);
+---
+
+<section class="asg-exp-hero" aria-labelledby="asg-exp-hero-title" data-asg-exp-progress-off>
+  <div class="asg-exp-hero__copy">
+    {kicker && <p class="asg-exp-hero__kicker asg-exp-mono">{kicker}</p>}
+    <h1 class="asg-exp-hero__title asg-exp-display asg-exp-slab" id="asg-exp-hero-title">
+      {lines.map((line, i) => (
+        <span style={`--i:${i}`}>{line}</span>
+      ))}
+    </h1>
+    {introduction && <p class="asg-exp-hero__intro">{introduction}</p>}
+    <a class="asg-exp-hero__cue asg-exp-mono" href={scrollTo}>
+      <span class="asg-exp-hero__cue-line" aria-hidden="true"></span>
+      {labels.scroll}
+    </a>
+  </div>
+  <figure
+    class="asg-exp-hero__media"
+    style={`--asg-exp-focus:${image.focus};--asg-exp-focus-sm:${image.focusMobile}`}
+  >
+    <img
+      src={image.src}
+      srcset={image.srcset || undefined}
+      sizes={image.srcset ? '(min-width: 900px) 64vw, 100vw' : undefined}
+      width={image.width || undefined}
+      height={image.height || undefined}
+      alt={image.alt}
+      loading="eager"
+      fetchpriority="high"
+    />
+    {facts.length > 0 && (
+      <figcaption class="asg-exp-hero__facts asg-exp-mono">
+        {facts.map((f) => (
+          <span>{f}</span>
+        ))}
+      </figcaption>
+    )}
+  </figure>
+</section>

@@ -1,0 +1,66 @@
+---
+/**
+ * An asymmetric composition of one chapter's photos. The layout of each photo
+ * picks a spread from the composition engine; the result is a 12-column grid
+ * on desktop, a 6-column grid without overlaps on tablets and a vertical,
+ * mostly single-column flow on phones. DOM order is reading order throughout.
+ */
+import { composeSpreads } from '../../internal/expedition/layout.js';
+import type { ResolvedTravelImage } from '../../internal/expedition/types.js';
+import TravelImage from './TravelImage.astro';
+import '../../styles/expedition.css';
+
+interface Props {
+  images: ResolvedTravelImage[];
+  /** Frames in the whole expedition. Defaults to this grid's own count. */
+  total?: number;
+  /** Start the first spread on the right. */
+  mirror?: boolean;
+  /** Load the first N photos eagerly. Default `0`. */
+  eager?: number;
+  openLabel?: string;
+  frameWord?: string;
+}
+
+const {
+  images,
+  total = images.length,
+  mirror = false,
+  eager = 0,
+  openLabel,
+  frameWord,
+} = Astro.props;
+
+const placements = composeSpreads(
+  images.map((i) => i.layout),
+  mirror,
+);
+
+// Stagger reveals within a spread only; a new spread starts its own beat.
+let lastRow = 0;
+let beat = 0;
+const delays = placements.map((p) => {
+  beat = p.row === lastRow ? beat + 1 : 0;
+  lastRow = p.row;
+  return beat;
+});
+---
+
+<div class="asg-exp-grid">
+  {images.map((image, i) => (
+    <TravelImage
+      image={image}
+      total={total}
+      placement={placements[i]}
+      eager={i < eager}
+      delay={delays[i]}
+      openLabel={openLabel}
+      frameWord={frameWord}
+    />
+  ))}
+</div>
+
+<script>
+  import { initReveal, onPage } from '../../internal/expedition/client.js';
+  onPage(() => initReveal());
+</script>

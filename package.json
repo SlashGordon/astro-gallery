@@ -64,7 +64,7 @@
     "dev:demo": "npm --prefix demo run dev",
     "demo": "npm --prefix demo run dev",
     "demo:build": "npm --prefix demo run build",
-    "prepare": "npm run build"
+    "prepare": "git config core.hooksPath .githooks || true && npm run build"
   },
   "overrides": {
     "esbuild": "^0.28.2"
@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.4.1",
-    "astro": "^7.2.9",
+    "astro": "^7.4.0",
     "playwright": "^1.63.0",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^1.0.0",

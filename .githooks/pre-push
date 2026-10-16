@@ -1,0 +1,7 @@
+#!/bin/sh
+# Same check as CI. Catches commits made with --no-verify.
+
+npm run --silent format:check || {
+  echo "Prettier check failed. Run 'npm run format', commit and push again." >&2
+  exit 1
+}

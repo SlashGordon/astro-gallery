@@ -1,0 +1,49 @@
+---
+/**
+ * Where am I: a thin reading bar along the top edge, and on wide screens a
+ * stack of chapter numbers in the left margin with the current destination
+ * spelled out. The bar is a scroll-driven CSS animation where supported; the
+ * chapter tracking is an IntersectionObserver. Both stay out of the way of the
+ * hero, the interludes and the closing sequence.
+ */
+import config from 'virtual:astro-gallery/config';
+import { resolveLabels, type ExpeditionLabelOptions } from '../../internal/expedition/labels.js';
+import '../../styles/expedition.css';
+
+interface Props {
+  chapters: Array<{ id: string; title: string; number: number }>;
+  locale?: string;
+  labels?: ExpeditionLabelOptions;
+}
+
+const { chapters, locale = config.locale, labels: labelsProp } = Astro.props;
+const labels = resolveLabels(labelsProp, locale);
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<div class="asg-exp-progress__bar" aria-hidden="true"></div>
+{chapters.length > 1 && (
+  <nav class="asg-exp-progress" aria-label={labels.chapters} data-asg-exp-progress>
+    <ol>
+      {chapters.map((c) => (
+        <li>
+          <a class="asg-exp-mono" href={`#${c.id}`} data-asg-exp-chapter={c.title}>
+            <span class="asg-exp-sr">{labels.chapter} </span>
+            {pad(c.number)}
+            <span class="asg-exp-sr">: {c.title}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+    <p
+      class="asg-exp-progress__label asg-exp-mono"
+      data-asg-exp-progress-label
+      aria-hidden="true"
+    />
+  </nav>
+)}
+
+<script>
+  import { initProgress, onPage } from '../../internal/expedition/client.js';
+  onPage(() => initProgress());
+</script>

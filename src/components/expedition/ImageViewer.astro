@@ -1,0 +1,61 @@
+---
+/**
+ * The immersive viewer: one modal `<dialog>` per page, filled from whichever
+ * photo opened it. Every `TravelImage` on the page joins the same sequence, so
+ * previous/next runs across chapters. Without JavaScript (or without
+ * `<dialog>` support) the photo links simply open the full image.
+ */
+import config from 'virtual:astro-gallery/config';
+import { resolveLabels, type ExpeditionLabelOptions } from '../../internal/expedition/labels.js';
+import '../../styles/expedition.css';
+
+interface Props {
+  locale?: string;
+  labels?: ExpeditionLabelOptions;
+}
+
+const { locale = config.locale, labels: labelsProp } = Astro.props;
+const labels = resolveLabels(labelsProp, locale);
+---
+
+<dialog class="asg-exp-viewer" aria-label={labels.viewer} data-asg-exp-viewer>
+  <div class="asg-exp-viewer__stage" data-asg-exp-viewer-stage>
+    <img class="asg-exp-viewer__img" alt="" data-asg-exp-viewer-img />
+    <button
+      type="button"
+      class="asg-exp-btn asg-exp-viewer__nav asg-exp-viewer__nav--prev"
+      data-asg-exp-viewer-prev
+    >
+      <span aria-hidden="true">←</span>
+      <span class="asg-exp-sr">{labels.previous}</span>
+    </button>
+    <button
+      type="button"
+      class="asg-exp-btn asg-exp-viewer__nav asg-exp-viewer__nav--next"
+      data-asg-exp-viewer-next
+    >
+      <span aria-hidden="true">→</span>
+      <span class="asg-exp-sr">{labels.next}</span>
+    </button>
+  </div>
+  <div class="asg-exp-viewer__panel">
+    <p class="asg-exp-viewer__frame asg-exp-display" data-asg-exp-viewer-frame></p>
+    <p
+      class="asg-exp-viewer__location asg-exp-mono asg-exp-accent-text"
+      data-asg-exp-viewer-location
+    ></p>
+    <h2 class="asg-exp-viewer__title" data-asg-exp-viewer-title></h2>
+    <p class="asg-exp-viewer__caption" data-asg-exp-viewer-caption></p>
+    <p class="asg-exp-viewer__meta asg-exp-mono" data-asg-exp-viewer-meta></p>
+  </div>
+  <button type="button" class="asg-exp-btn asg-exp-viewer__close" data-asg-exp-viewer-close>
+    <span aria-hidden="true">✕</span>
+    <span class="asg-exp-sr">{labels.close}</span>
+  </button>
+  <p class="asg-exp-sr" aria-live="polite" aria-atomic="true" data-asg-exp-viewer-status></p>
+</dialog>
+
+<script>
+  import { initViewer, onPage } from '../../internal/expedition/client.js';
+  onPage(() => initViewer());
+</script>

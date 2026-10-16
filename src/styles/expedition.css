@@ -1,0 +1,1600 @@
+/*
+ * astro-gallery — Expedition styles.
+ *
+ * A brutalist travel publication: warm paper or near-black, one accent, three
+ * type roles (condensed display, an editorial serif, monospaced utility) and
+ * photographs without frames or cards. Everything lives under `.asg-exp`;
+ * override the custom properties below to retheme it.
+ *
+ * The fonts are system stacks on purpose: nothing is downloaded, so there is no
+ * font swap and no layout shift. To use your own faces, load them and set
+ * `--asg-exp-font-display`, `--asg-exp-font-text` and `--asg-exp-font-mono`.
+ */
+
+/* ----------------------------------------------------------------- tokens -- */
+
+.asg-exp {
+  --asg-exp-bg: #efebe2;
+  --asg-exp-ink: #12110f;
+  --asg-exp-muted: #5d584f;
+  --asg-exp-surface: #ddd7cb;
+  --asg-exp-rule: var(--asg-exp-ink);
+  /* Large type and graphic marks only (3:1 on paper). */
+  --asg-exp-accent: #ff3b1f;
+  /* The accent for small text: 4.9:1 on paper. */
+  --asg-exp-accent-ink: #c22a10;
+
+  --asg-exp-font-display:
+    'Avenir Next Condensed', 'Bahnschrift Condensed', 'Roboto Condensed', 'Arial Narrow',
+    'Helvetica Neue', Impact, sans-serif;
+  --asg-exp-font-text:
+    'Iowan Old Style', Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif;
+  --asg-exp-font-mono:
+    ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+
+  --asg-exp-nav-h: 3.25rem;
+  --asg-exp-gutter: clamp(1rem, 3.4vw, 3.5rem);
+  --asg-exp-gap: clamp(0.75rem, 1.6vw, 1.5rem);
+  --asg-exp-drop: clamp(2.5rem, 7vw, 8rem);
+  --asg-exp-space: clamp(6rem, 15vw, 15rem);
+  --asg-exp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --asg-exp-rise: 2.75rem;
+  --asg-exp-duration: 1000ms;
+}
+
+.asg-exp[data-asg-exp-accent='lime'] {
+  --asg-exp-accent: #c8ff1a;
+  --asg-exp-accent-ink: #4a6600;
+}
+
+.asg-exp[data-asg-exp-theme='dark'] {
+  --asg-exp-bg: #0e0e0c;
+  --asg-exp-ink: #efebe2;
+  --asg-exp-muted: #9b968c;
+  --asg-exp-surface: #1f1e1b;
+  --asg-exp-accent-ink: var(--asg-exp-accent);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  .asg-exp[data-asg-exp-theme='auto'] {
+    --asg-exp-bg: #0e0e0c;
+    --asg-exp-ink: #efebe2;
+    --asg-exp-muted: #9b968c;
+    --asg-exp-surface: #1f1e1b;
+    --asg-exp-accent-ink: var(--asg-exp-accent);
+    color-scheme: dark;
+  }
+}
+
+/* ------------------------------------------------------------------- base -- */
+
+body:has(> .asg-exp) {
+  margin: 0;
+}
+
+html.asg-exp-locked {
+  overflow: hidden;
+}
+
+.asg-exp {
+  position: relative;
+  min-height: 100vh;
+  background: var(--asg-exp-bg);
+  color: var(--asg-exp-ink);
+  font-family: var(--asg-exp-font-text);
+  font-size: 1rem;
+  line-height: 1.55;
+  /* `clip`, not `hidden`: no scroll container, so sticky and fixed still work. */
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.asg-exp *,
+.asg-exp *::before,
+.asg-exp *::after {
+  box-sizing: border-box;
+}
+
+/* `:where()` keeps these resets at class weight, below every component rule. */
+.asg-exp :where(img) {
+  display: block;
+  max-width: 100%;
+  margin: 0;
+  border-radius: 0;
+}
+
+.asg-exp :where(a) {
+  color: inherit;
+}
+
+.asg-exp :where(ul, ol) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.asg-exp :focus-visible {
+  outline: 3px solid var(--asg-exp-accent);
+  outline-offset: 3px;
+}
+
+.asg-exp-main:focus {
+  outline: none;
+}
+
+/* --------------------------------------------------------------- type roles -- */
+
+.asg-exp-display {
+  font-family: var(--asg-exp-font-display);
+  font-weight: 800;
+  font-stretch: condensed;
+  line-height: 0.84;
+  letter-spacing: -0.012em;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+.asg-exp-mono {
+  font-family: var(--asg-exp-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.asg-exp-accent-text {
+  color: var(--asg-exp-accent-ink);
+}
+
+/*
+ * Lines set on solid slabs of the page colour. Wherever display type runs
+ * across a photograph it keeps full contrast, whatever the photo does there.
+ */
+.asg-exp-slab > span {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.06em 0.08em 0.02em;
+  text-wrap: balance;
+  background: var(--asg-exp-bg);
+  color: var(--asg-exp-ink);
+}
+
+.asg-exp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.asg-exp-skip {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background: var(--asg-exp-ink);
+  color: var(--asg-exp-bg);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.asg-exp-skip:focus {
+  transform: none;
+}
+
+.asg-exp-btn {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 1.5px solid currentColor;
+  border-radius: 0;
+  background: var(--asg-exp-bg);
+  color: var(--asg-exp-ink);
+  font: 600 1.1rem/1 var(--asg-exp-font-mono);
+  cursor: pointer;
+  transition:
+    background 200ms ease,
+    color 200ms ease;
+}
+
+.asg-exp-btn:hover:not(:disabled) {
+  background: var(--asg-exp-ink);
+  color: var(--asg-exp-bg);
+}
+
+.asg-exp-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.asg-exp-btn[hidden] {
+  display: none;
+}
+
+/* ------------------------------------------------------------- navigation -- */
+
+.asg-exp-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  height: var(--asg-exp-nav-h);
+  padding: 0 var(--asg-exp-gutter);
+  background: var(--asg-exp-bg);
+  border-bottom: 1.5px solid var(--asg-exp-rule);
+  transition: transform 520ms var(--asg-exp-ease);
+}
+
+.asg-exp-nav.is-hidden:not(:focus-within) {
+  transform: translateY(-100%);
+}
+
+.asg-exp-nav a {
+  text-decoration: none;
+}
+
+.asg-exp-nav__brand {
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.asg-exp-nav__links ul {
+  display: flex;
+  gap: clamp(1rem, 2.4vw, 2.5rem);
+}
+
+.asg-exp-nav__links a {
+  display: inline-block;
+  padding: 0.75rem 0;
+  background: linear-gradient(var(--asg-exp-accent), var(--asg-exp-accent)) 0 calc(100% - 0.5rem) /
+    0 2px no-repeat;
+  transition: background-size 380ms var(--asg-exp-ease);
+}
+
+.asg-exp-nav__links a:hover,
+.asg-exp-nav__links a[aria-current='page'] {
+  background-size: 100% 2px;
+}
+
+.asg-exp-nav__menu {
+  display: none;
+}
+
+.asg-exp-nav__menu summary {
+  display: grid;
+  place-items: center;
+  min-height: 2.75rem;
+  padding: 0 0.25rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.asg-exp-nav__menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.asg-exp-nav__menu[open] summary {
+  color: var(--asg-exp-accent-ink);
+}
+
+.asg-exp-nav__panel {
+  position: fixed;
+  inset: var(--asg-exp-nav-h) 0 0;
+  overflow-y: auto;
+  padding: 2rem var(--asg-exp-gutter) 3rem;
+  background: var(--asg-exp-bg);
+  display: grid;
+  align-content: start;
+  gap: 2.5rem;
+}
+
+.asg-exp-nav__big {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.asg-exp-nav__big a {
+  font-size: clamp(2.75rem, 15vw, 5rem);
+}
+
+.asg-exp-nav__big a[aria-current='page'] {
+  color: var(--asg-exp-accent);
+}
+
+.asg-exp-nav__chapters {
+  display: grid;
+  border-top: 1.5px solid var(--asg-exp-rule);
+}
+
+.asg-exp-nav__chapters a {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--asg-exp-rule) 30%, transparent);
+  font-size: 1.05rem;
+}
+
+@media (max-width: 719px) {
+  .asg-exp-nav__links {
+    display: none;
+  }
+  .asg-exp-nav__menu {
+    display: block;
+  }
+}
+
+/* --------------------------------------------------------------- progress -- */
+
+.asg-exp-progress__bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  width: 100%;
+  height: 3px;
+  background: var(--asg-exp-accent);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--asg-exp-progress, 0));
+  pointer-events: none;
+}
+
+@supports (animation-timeline: scroll()) {
+  .asg-exp-progress__bar {
+    animation: asg-exp-progress linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+
+@keyframes asg-exp-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The chapter index lives in the left margin, so it needs a wide one. */
+.asg-exp-progress {
+  display: none;
+}
+
+@media (min-width: 1200px) {
+  .asg-exp-progress {
+    position: fixed;
+    left: calc(var(--asg-exp-gutter) / 2);
+    bottom: 1.5rem;
+    z-index: 40;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 0.9rem;
+    transform: translateX(-50%);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 400ms ease,
+      visibility 0s linear 400ms;
+  }
+
+  .asg-exp-progress.is-active {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 400ms ease;
+  }
+
+  .asg-exp-progress ol {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .asg-exp-progress a {
+    display: block;
+    padding: 0.2rem 0.25rem;
+    background: var(--asg-exp-bg);
+    color: var(--asg-exp-muted);
+    text-decoration: none;
+  }
+
+  .asg-exp-progress a[aria-current] {
+    background: var(--asg-exp-ink);
+    color: var(--asg-exp-bg);
+  }
+
+  .asg-exp-progress__label {
+    margin: 0;
+    padding: 0.35rem 0.2rem;
+    background: var(--asg-exp-bg);
+    color: var(--asg-exp-accent-ink);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  .asg-exp-progress__label:empty {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------- hero -- */
+
+.asg-exp-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  padding: var(--asg-exp-nav-h) 0 0;
+}
+
+.asg-exp-hero__media {
+  position: relative;
+  order: -1;
+  margin: 0;
+  aspect-ratio: 4 / 5;
+  max-height: 54svh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--asg-exp-surface);
+}
+
+.asg-exp-hero__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--asg-exp-focus-sm, 50% 50%);
+}
+
+.asg-exp-hero__facts {
+  position: absolute;
+  top: 0.75rem;
+  left: var(--asg-exp-gutter);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.75rem;
+  margin: 0;
+  padding: 0.2rem 0.45rem;
+  background: var(--asg-exp-bg);
+  color: var(--asg-exp-ink);
+}
+
+.asg-exp-hero__copy {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--asg-exp-gutter) 3rem;
+}
+
+/* On phones the kicker reads under the headline; the DOM order is unchanged. */
+.asg-exp-hero__kicker {
+  order: 1;
+  margin: 1rem 0 0;
+  color: var(--asg-exp-accent-ink);
+}
+
+.asg-exp-hero__intro,
+.asg-exp-hero__cue {
+  order: 2;
+}
+
+/* On phones the headline climbs back over the bottom of the photo. */
+.asg-exp-hero__title {
+  margin: -0.62em 0 0 calc(-0.08em);
+  font-size: clamp(3.1rem, 16.5vw, 6rem);
+}
+
+.asg-exp-hero__intro {
+  max-width: 30ch;
+  margin: 1.5rem 0 0;
+  font-size: 1.125rem;
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.asg-exp-hero__cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 2.5rem;
+  padding: 0.5rem 0;
+  text-decoration: none;
+}
+
+.asg-exp-hero__cue-line {
+  width: 3.5rem;
+  height: 1.5px;
+  background: var(--asg-exp-accent);
+  transform-origin: 0 50%;
+}
+
+@media (min-width: 900px) {
+  .asg-exp-hero {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--asg-exp-gap);
+    min-height: 100svh;
+    padding: var(--asg-exp-nav-h) 0 0 var(--asg-exp-gutter);
+  }
+
+  .asg-exp-hero__media {
+    grid-column: 6 / -1;
+    grid-row: 1;
+    order: 0;
+    aspect-ratio: auto;
+    max-height: none;
+    min-height: calc(100svh - var(--asg-exp-nav-h));
+  }
+
+  .asg-exp-hero__media img {
+    position: absolute;
+    inset: 0;
+    object-position: var(--asg-exp-focus, 50% 50%);
+  }
+
+  .asg-exp-hero__facts {
+    top: auto;
+    bottom: 1.25rem;
+    left: auto;
+    right: var(--asg-exp-gutter);
+  }
+
+  /* The copy and the photo share a row: the headline runs across the image. */
+  .asg-exp-hero__copy {
+    grid-column: 1 / 11;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 2rem 0 clamp(2rem, 5vh, 4rem);
+  }
+
+  .asg-exp-hero__kicker,
+  .asg-exp-hero__intro,
+  .asg-exp-hero__cue {
+    order: 0;
+  }
+
+  .asg-exp-hero__kicker {
+    margin: 0 0 auto;
+    padding-top: 1rem;
+  }
+
+  .asg-exp-hero__title {
+    margin: 0 0 0 -0.06em;
+    font-size: clamp(4.5rem, 10.6vw, 13.5rem);
+  }
+
+  .asg-exp-hero__intro {
+    max-width: 26ch;
+    margin-top: 2rem;
+    font-size: clamp(1.1rem, 1.35vw, 1.4rem);
+  }
+
+  .asg-exp-hero__cue {
+    margin-top: 2rem;
+  }
+}
+
+/* --------------------------------------------------------------- chapters -- */
+
+.asg-exp-chapter {
+  position: relative;
+  padding: var(--asg-exp-space) var(--asg-exp-gutter) 0;
+  scroll-margin-top: var(--asg-exp-nav-h);
+}
+
+/*
+ * Decorative: the chapter number in outline. On phones the rule runs through
+ * its foot; on desktop it holds its own columns opposite the copy, so it never
+ * crosses text.
+ */
+.asg-exp-chapter__number {
+  justify-self: end;
+  margin: 0 -0.04em calc(-1.25rem - 0.14em) 0;
+  font-size: clamp(8rem, 40vw, 30rem);
+  line-height: 0.74;
+  color: transparent;
+  -webkit-text-stroke: clamp(1.5px, 0.2vw, 3px) var(--asg-exp-accent);
+  pointer-events: none;
+  user-select: none;
+}
+
+.asg-exp-chapter--mirror .asg-exp-chapter__number {
+  justify-self: start;
+  margin: 0 0 calc(-1.25rem - 0.14em) -0.04em;
+}
+
+.asg-exp-chapter__head {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  margin-bottom: clamp(3rem, 8vw, 7rem);
+}
+
+.asg-exp-chapter__rule {
+  display: block;
+  height: 2px;
+  background: var(--asg-exp-rule);
+  transform-origin: 0 50%;
+}
+
+.asg-exp-chapter__kicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0;
+}
+
+.asg-exp-chapter__title {
+  margin: 0 0 0 -0.05em;
+  font-size: clamp(3.25rem, 14vw, 13rem);
+}
+
+.asg-exp-chapter__facts {
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+}
+
+.asg-exp-chapter__facts p {
+  margin: 0;
+}
+
+.asg-exp-chapter__intro {
+  max-width: 38ch;
+  margin: 0;
+  font-size: clamp(1.05rem, 1.25vw, 1.25rem);
+  line-height: 1.6;
+}
+
+/* A dotted route: stops joined by dotted rules, the start marked solid. */
+.asg-exp-route {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+}
+
+.asg-exp-route li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.asg-exp-route li::before {
+  content: '';
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 1.5px solid var(--asg-exp-accent);
+  border-radius: 50%;
+}
+
+.asg-exp-route li:first-child::before {
+  border-radius: 0;
+  background: var(--asg-exp-accent);
+}
+
+/* The dotted leg between two stops. */
+.asg-exp-route li + li {
+  position: relative;
+  padding-left: 2.6rem;
+}
+
+.asg-exp-route li + li::after {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  top: 50%;
+  width: 2rem;
+  border-top: 2px dotted var(--asg-exp-ink);
+}
+
+@media (min-width: 1024px) {
+  .asg-exp-chapter__head {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--asg-exp-gap);
+    row-gap: 1.75rem;
+  }
+
+  .asg-exp-chapter__rule,
+  .asg-exp-chapter__kicker {
+    grid-column: 1 / -1;
+  }
+
+  .asg-exp-chapter__rule {
+    grid-row: 1;
+  }
+
+  .asg-exp-chapter__kicker {
+    grid-row: 2;
+  }
+
+  .asg-exp-chapter__number {
+    grid-column: 10 / 13;
+    grid-row: 3 / span 2;
+    align-self: end;
+    margin: 0 -0.04em -0.08em 0;
+    /* Two digits fit three of twelve columns. */
+    font-size: clamp(9rem, 18vw, 21rem);
+  }
+
+  .asg-exp-chapter__title {
+    grid-column: 1 / 10;
+    grid-row: 3;
+  }
+
+  .asg-exp-chapter__facts {
+    grid-column: 1 / 5;
+    grid-row: 4;
+  }
+
+  .asg-exp-chapter__intro {
+    grid-column: 5 / 10;
+    grid-row: 4;
+  }
+
+  .asg-exp-chapter--mirror .asg-exp-chapter__number {
+    grid-column: 1 / 4;
+    margin: 0 0 -0.08em -0.04em;
+  }
+
+  .asg-exp-chapter--mirror .asg-exp-chapter__title {
+    grid-column: 4 / -1;
+    text-align: right;
+    margin: 0 -0.05em 0 0;
+  }
+
+  .asg-exp-chapter--mirror .asg-exp-chapter__facts {
+    grid-column: 9 / 13;
+    text-align: right;
+  }
+
+  .asg-exp-chapter--mirror .asg-exp-chapter__facts .asg-exp-route {
+    justify-content: flex-end;
+  }
+
+  .asg-exp-chapter--mirror .asg-exp-chapter__intro {
+    grid-column: 5 / 9;
+  }
+}
+
+/* ---------------------------------------------------------- compositions -- */
+
+/*
+ * Phones: two columns. Most frames span both; compacts pair up; portraits lean
+ * to one side at 82%; features and panoramas run edge to edge.
+ */
+.asg-exp-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(2.75rem, 9vw, 4rem) var(--asg-exp-gap);
+  align-items: start;
+}
+
+.asg-exp-frame {
+  position: relative;
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+}
+
+.asg-exp-frame--compact {
+  grid-column: span 1;
+}
+
+.asg-exp-frame--portrait {
+  width: 82%;
+}
+
+.asg-exp-frame--portrait[data-side='end'] {
+  justify-self: end;
+}
+
+.asg-exp-frame--feature,
+.asg-exp-frame--panorama {
+  margin-inline: calc(-1 * var(--asg-exp-gutter));
+}
+
+.asg-exp-frame--feature .asg-exp-frame__caption,
+.asg-exp-frame--panorama .asg-exp-frame__caption {
+  padding-inline: var(--asg-exp-gutter);
+}
+
+/* Tablets: six columns, no overlaps, sides alternate. */
+@media (min-width: 640px) {
+  .asg-exp-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .asg-exp-frame,
+  .asg-exp-frame--compact {
+    grid-column: 1 / span var(--asg-exp-tspan);
+  }
+
+  .asg-exp-frame[data-side='end'] {
+    grid-column: span var(--asg-exp-tspan) / -1;
+  }
+
+  .asg-exp-frame--portrait {
+    width: auto;
+  }
+
+  .asg-exp-frame--feature {
+    margin-inline: 0;
+  }
+
+  .asg-exp-frame--feature .asg-exp-frame__caption {
+    padding-inline: 0;
+  }
+}
+
+/* Desktop: the composition engine's spreads, overlaps and staggered drops. */
+@media (min-width: 1024px) {
+  .asg-exp-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    row-gap: clamp(4rem, 9vw, 10rem);
+  }
+
+  .asg-exp-frame,
+  .asg-exp-frame--compact,
+  .asg-exp-frame[data-side='end'] {
+    grid-column: var(--asg-exp-col);
+    grid-row: var(--asg-exp-row);
+    margin-top: calc(var(--asg-exp-drop-n, 0) * var(--asg-exp-drop));
+  }
+
+  .asg-exp-frame.is-lift {
+    z-index: 2;
+  }
+
+  .asg-exp-frame--panorama {
+    margin-inline: calc(-1 * var(--asg-exp-gutter));
+  }
+}
+
+/* ----------------------------------------------------------------- frames -- */
+
+.asg-exp-frame__media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: var(--asg-exp-ar-sm, var(--asg-exp-ar, 3 / 2));
+  background: var(--asg-exp-surface);
+  cursor: zoom-in;
+  text-decoration: none;
+}
+
+@media (min-width: 640px) {
+  .asg-exp-frame__media {
+    aspect-ratio: var(--asg-exp-ar, 3 / 2);
+  }
+}
+
+.asg-exp-frame__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--asg-exp-focus-sm, 50% 50%);
+  transition: transform 1100ms var(--asg-exp-ease);
+}
+
+@media (min-width: 640px) {
+  .asg-exp-frame__media img {
+    object-position: var(--asg-exp-focus, 50% 50%);
+  }
+}
+
+.asg-exp-frame__media:focus-visible {
+  outline-offset: 4px;
+}
+
+/* A small index chip, shown on hover or keyboard focus. Decorative duplicate of the caption. */
+.asg-exp-frame__chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0.3rem 0.5rem;
+  background: var(--asg-exp-ink);
+  color: var(--asg-exp-bg);
+  opacity: 0;
+  transform: translateY(-100%);
+  transition:
+    opacity 260ms ease,
+    transform 420ms var(--asg-exp-ease);
+}
+
+.asg-exp-frame__media:focus-visible .asg-exp-frame__chip {
+  opacity: 1;
+  transform: none;
+}
+
+@media (hover: hover) {
+  .asg-exp-frame__media:hover img {
+    transform: scale(1.035);
+  }
+
+  .asg-exp-frame__media:hover .asg-exp-frame__chip {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.asg-exp-frame__caption {
+  display: grid;
+  gap: 0.2rem;
+  max-width: min(36rem, 100%);
+  margin-top: 0.85rem;
+}
+
+@media (min-width: 1024px) {
+  /* Short enough that an overlapping neighbour never reaches it. */
+  .asg-exp-frame__caption {
+    max-width: min(36rem, 72%);
+  }
+
+  .asg-exp-frame[data-caption='end'] .asg-exp-frame__caption {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .asg-exp-frame--panorama .asg-exp-frame__caption {
+    padding-inline: var(--asg-exp-gutter);
+  }
+
+  .asg-exp-frame--panorama[data-caption='end'] .asg-exp-frame__caption {
+    margin-right: 0;
+  }
+}
+
+.asg-exp-frame__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.9rem;
+  margin: 0;
+  color: var(--asg-exp-muted);
+}
+
+.asg-exp-frame[data-caption='end'] .asg-exp-frame__meta {
+  justify-content: flex-end;
+}
+
+@media (max-width: 1023px) {
+  .asg-exp-frame[data-caption='end'] .asg-exp-frame__meta {
+    justify-content: flex-start;
+  }
+}
+
+.asg-exp-frame__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.asg-exp-frame__text {
+  margin: 0.2rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--asg-exp-muted);
+}
+
+/* An editorial heading that cuts into the top edge of a feature or panorama. */
+.asg-exp-frame__heading {
+  position: relative;
+  z-index: 3;
+  margin: 0 0 -0.42em calc(-0.06em);
+  font-size: clamp(2.6rem, 9vw, 9rem);
+  pointer-events: none;
+}
+
+.asg-exp-frame--feature .asg-exp-frame__heading,
+.asg-exp-frame--panorama .asg-exp-frame__heading {
+  margin-left: var(--asg-exp-gutter);
+}
+
+@media (min-width: 1024px) {
+  .asg-exp-frame--feature .asg-exp-frame__heading {
+    margin-left: calc(-0.06em);
+  }
+}
+
+/* -------------------------------------------------------------- sequences -- */
+
+.asg-exp-seq {
+  position: relative;
+  z-index: 1;
+  margin-inline: calc(-1 * var(--asg-exp-gutter));
+  --asg-exp-seq-h: clamp(16rem, 54svh, 38rem);
+}
+
+@media (min-width: 640px) {
+  .asg-exp-seq {
+    --asg-exp-seq-h: clamp(20rem, 62vh, 46rem);
+  }
+}
+
+.asg-exp-seq__bar {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0 var(--asg-exp-gutter);
+  margin-bottom: 1.25rem;
+}
+
+.asg-exp-seq__count {
+  margin-left: auto;
+  color: var(--asg-exp-accent-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.asg-exp-seq__buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.asg-exp-seq__track {
+  display: flex;
+  gap: var(--asg-exp-gap);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--asg-exp-gutter);
+  padding: 0 var(--asg-exp-gutter) 1.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--asg-exp-ink) transparent;
+}
+
+.asg-exp-seq__track:focus-visible {
+  outline-offset: -3px;
+}
+
+/* Bleed right only, so frames scrolling sideways never pass under the chapter index. */
+@media (min-width: 1200px) {
+  .asg-exp-seq {
+    margin-left: 0;
+  }
+
+  .asg-exp-seq__bar,
+  .asg-exp-seq__track {
+    padding-left: 0;
+  }
+
+  .asg-exp-seq__track {
+    scroll-padding-inline-start: 0;
+  }
+}
+
+.asg-exp-seq__item {
+  flex: none;
+  scroll-snap-align: start;
+}
+
+.asg-exp-frame--seq .asg-exp-frame__media {
+  height: var(--asg-exp-seq-h);
+  width: auto;
+  aspect-ratio: var(--asg-exp-nat);
+}
+
+/* The caption takes the photo's width instead of widening the item. */
+.asg-exp-frame--seq .asg-exp-frame__caption {
+  contain: inline-size;
+  max-width: none;
+}
+
+/* -------------------------------------------------------------- interlude -- */
+
+.asg-exp-interlude {
+  position: relative;
+  display: grid;
+  align-content: end;
+  min-height: 92svh;
+  margin-top: var(--asg-exp-space);
+  padding: 0 var(--asg-exp-gutter) clamp(2rem, 6vw, 5rem);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.asg-exp-interlude__media {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--asg-exp-surface);
+}
+
+.asg-exp-interlude__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--asg-exp-focus-sm, 50% 50%);
+}
+
+@media (min-width: 640px) {
+  .asg-exp-interlude__media img {
+    object-position: var(--asg-exp-focus, 50% 50%);
+  }
+}
+
+.asg-exp-interlude__label {
+  position: absolute;
+  top: clamp(1rem, 3vw, 2.5rem);
+  left: var(--asg-exp-gutter);
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  background: var(--asg-exp-bg);
+  color: var(--asg-exp-ink);
+}
+
+.asg-exp-interlude__statement {
+  margin: 0;
+  font-size: clamp(2.75rem, 9vw, 9.5rem);
+}
+
+/* ---------------------------------------------------------------- closing -- */
+
+.asg-exp-closing {
+  position: relative;
+  margin-top: var(--asg-exp-space);
+  padding-bottom: 1.5rem;
+}
+
+.asg-exp-closing__media {
+  aspect-ratio: 4 / 5;
+  max-height: 80svh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--asg-exp-surface);
+}
+
+@media (min-width: 640px) {
+  .asg-exp-closing__media {
+    aspect-ratio: 21 / 9;
+    max-height: none;
+  }
+}
+
+.asg-exp-closing__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--asg-exp-focus-sm, 50% 50%);
+}
+
+@media (min-width: 640px) {
+  .asg-exp-closing__media img {
+    object-position: var(--asg-exp-focus, 50% 50%);
+  }
+}
+
+.asg-exp-closing__title {
+  position: relative;
+  z-index: 1;
+  margin: -0.6em 0 0;
+  padding: 0 var(--asg-exp-gutter);
+  font-size: clamp(3rem, 13vw, 14rem);
+}
+
+.asg-exp-closing--plain .asg-exp-closing__title {
+  margin-top: 0;
+}
+
+.asg-exp-closing__next {
+  margin-top: clamp(3rem, 8vw, 7rem);
+  padding: 0 var(--asg-exp-gutter);
+}
+
+.asg-exp-closing__next > p {
+  margin: 0 0 1rem;
+  color: var(--asg-exp-muted);
+}
+
+.asg-exp-closing__next ul {
+  border-top: 2px solid var(--asg-exp-rule);
+}
+
+.asg-exp-closing__next a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem 1.5rem;
+  padding: 1.1rem 0;
+  border-bottom: 1.5px solid var(--asg-exp-rule);
+  text-decoration: none;
+}
+
+.asg-exp-closing__label {
+  font-size: clamp(2rem, 6vw, 5rem);
+}
+
+.asg-exp-closing__next a .asg-exp-mono {
+  grid-row: 2;
+  color: var(--asg-exp-muted);
+}
+
+.asg-exp-closing__arrow {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  font: 400 clamp(1.75rem, 4vw, 3.5rem) / 1 var(--asg-exp-font-mono);
+  color: var(--asg-exp-accent);
+  transition: transform 420ms var(--asg-exp-ease);
+}
+
+.asg-exp-closing__next a:hover .asg-exp-closing__arrow,
+.asg-exp-closing__next a:focus-visible .asg-exp-closing__arrow {
+  transform: translateX(0.35em);
+}
+
+@media (hover: hover) {
+  .asg-exp-closing__next a:hover .asg-exp-closing__label {
+    color: var(--asg-exp-accent);
+  }
+}
+
+.asg-exp-colophon {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem 2rem;
+  margin-top: clamp(4rem, 10vw, 9rem);
+  padding: 1.25rem var(--asg-exp-gutter) 0;
+  border-top: 1px solid color-mix(in srgb, var(--asg-exp-rule) 35%, transparent);
+  color: var(--asg-exp-muted);
+}
+
+.asg-exp-colophon p {
+  margin: 0;
+}
+
+.asg-exp-colophon a {
+  text-decoration: none;
+}
+
+/* ----------------------------------------------------------------- viewer -- */
+
+.asg-exp-viewer {
+  --asg-exp-bg: #0b0b0a;
+  --asg-exp-ink: #efebe2;
+  --asg-exp-muted: #9b968c;
+  --asg-exp-accent-ink: var(--asg-exp-accent, #ff3b1f);
+
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--asg-exp-bg);
+  color: var(--asg-exp-ink);
+  font-family: var(--asg-exp-font-text, Georgia, serif);
+  overscroll-behavior: contain;
+}
+
+.asg-exp-viewer[open] {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.asg-exp-viewer::backdrop {
+  background: #0b0b0a;
+}
+
+.asg-exp-viewer__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 3.75rem 0.75rem 0.75rem;
+  touch-action: pan-y;
+}
+
+.asg-exp-viewer__img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: opacity 260ms ease;
+}
+
+.asg-exp-viewer__stage.is-loading .asg-exp-viewer__img {
+  opacity: 0.25;
+}
+
+.asg-exp-viewer__nav {
+  position: absolute;
+  bottom: 0.75rem;
+}
+
+.asg-exp-viewer__nav--prev {
+  left: 0.75rem;
+}
+
+.asg-exp-viewer__nav--next {
+  right: 0.75rem;
+}
+
+.asg-exp-viewer__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.asg-exp-viewer__panel {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  max-height: 36svh;
+  overflow-y: auto;
+  padding: 1rem 1rem 1.5rem;
+  border-top: 1.5px solid var(--asg-exp-ink);
+}
+
+.asg-exp-viewer__frame {
+  margin: 0;
+  font-size: clamp(1.75rem, 8vw, 4.5rem);
+  color: var(--asg-exp-accent, #ff3b1f);
+}
+
+.asg-exp-viewer__location,
+.asg-exp-viewer__meta {
+  margin: 0;
+}
+
+.asg-exp-viewer__meta {
+  color: var(--asg-exp-muted);
+}
+
+.asg-exp-viewer__title {
+  margin: 0.25rem 0 0;
+  font-size: 1.25rem;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.asg-exp-viewer__caption {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--asg-exp-ink) 82%, transparent);
+}
+
+.asg-exp-viewer [hidden] {
+  display: none !important;
+}
+
+@media (min-width: 900px) {
+  .asg-exp-viewer[open] {
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 25rem);
+  }
+
+  .asg-exp-viewer__stage {
+    padding: 2.5rem 5rem;
+  }
+
+  .asg-exp-viewer__nav {
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+  }
+
+  .asg-exp-viewer__nav--prev {
+    left: 1.25rem;
+  }
+
+  .asg-exp-viewer__nav--next {
+    right: 1.25rem;
+  }
+
+  .asg-exp-viewer__panel {
+    max-height: none;
+    align-content: end;
+    padding: 5rem 2rem 2.5rem;
+    border-top: 0;
+    border-left: 1.5px solid var(--asg-exp-ink);
+  }
+
+  .asg-exp-viewer__close {
+    top: 1.25rem;
+    right: 1.25rem;
+  }
+}
+
+/* ------------------------------------------------------------------ motion -- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Reveals: only frames below the fold are ever hidden, and only by the script. */
+  .asg-exp [data-asg-exp-reveal].is-pending {
+    opacity: 0;
+    transform: translateY(var(--asg-exp-rise));
+    transition:
+      opacity calc(var(--asg-exp-duration) * 0.8) ease var(--asg-exp-delay, 0ms),
+      transform var(--asg-exp-duration) var(--asg-exp-ease) var(--asg-exp-delay, 0ms);
+  }
+
+  .asg-exp [data-asg-exp-reveal].is-pending.is-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* A chapter opens like a turned page: the rule draws across, then the title rises. */
+  .asg-exp-chapter__head.is-pending {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .asg-exp-chapter__head.is-pending > * {
+    opacity: 0;
+    transform: translateY(1.5rem);
+    transition:
+      opacity 700ms ease,
+      transform 900ms var(--asg-exp-ease);
+  }
+
+  .asg-exp-chapter__head.is-pending .asg-exp-chapter__rule {
+    transform: scaleX(0);
+    opacity: 1;
+    transition: transform 1100ms var(--asg-exp-ease);
+  }
+
+  .asg-exp-chapter__head.is-pending.is-in > * {
+    opacity: 1;
+    transform: none;
+  }
+
+  .asg-exp-chapter__head.is-pending.is-in > :nth-child(2) {
+    transition-delay: 160ms;
+  }
+  .asg-exp-chapter__head.is-pending.is-in > :nth-child(3) {
+    transition-delay: 240ms;
+  }
+  .asg-exp-chapter__head.is-pending.is-in > :nth-child(n + 4) {
+    transition-delay: 380ms;
+  }
+
+  /* Statements arrive line by line. */
+  .asg-exp-slab[data-asg-exp-reveal].is-pending {
+    opacity: 1;
+    transform: none;
+  }
+
+  .asg-exp-slab[data-asg-exp-reveal].is-pending > span {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(0.3em);
+    transition:
+      clip-path 900ms var(--asg-exp-ease),
+      transform 900ms var(--asg-exp-ease);
+    transition-delay: calc(var(--i, 0) * 110ms);
+  }
+
+  .asg-exp-slab[data-asg-exp-reveal].is-pending.is-in > span {
+    clip-path: inset(-0.5em);
+    transform: none;
+  }
+
+  /* The opening runs once on load. The photo settles; it never fades (LCP). */
+  .asg-exp-hero__title > span {
+    animation: asg-exp-line-in 1100ms var(--asg-exp-ease) both;
+    animation-delay: calc(120ms + var(--i, 0) * 110ms);
+  }
+
+  .asg-exp-hero__media img {
+    animation: asg-exp-settle 2200ms var(--asg-exp-ease) both;
+  }
+
+  .asg-exp-hero__cue-line {
+    animation: asg-exp-cue 2400ms var(--asg-exp-ease) 1400ms infinite;
+  }
+
+  /* Scroll-driven, where supported: never a JavaScript loop. */
+  @supports (animation-timeline: view()) {
+    /* Big frames open up from a slightly tighter crop as they come into view. */
+    .asg-exp-frame--feature .asg-exp-frame__media,
+    .asg-exp-frame--panorama .asg-exp-frame__media,
+    .asg-exp-closing__media {
+      animation: asg-exp-open linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 42%;
+    }
+
+    /* Interlude photos drift a little against the scroll. */
+    .asg-exp-interlude__media img {
+      height: 116%;
+      margin-top: -8%;
+      animation: asg-exp-drift linear both;
+      animation-timeline: view();
+      animation-range: cover;
+    }
+  }
+}
+
+/* Ends outside the box: the tight line height lets glyphs overhang it. */
+@keyframes asg-exp-line-in {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(0.35em);
+  }
+  to {
+    clip-path: inset(-0.5em);
+    transform: none;
+  }
+}
+
+@keyframes asg-exp-settle {
+  from {
+    transform: scale(1.07);
+  }
+}
+
+@keyframes asg-exp-cue {
+  0% {
+    transform: scaleX(0);
+  }
+  45% {
+    transform: scaleX(1);
+    transform-origin: 0 50%;
+  }
+  55% {
+    transform: scaleX(1);
+    transform-origin: 100% 50%;
+  }
+  100% {
+    transform: scaleX(0);
+    transform-origin: 100% 50%;
+  }
+}
+
+@keyframes asg-exp-open {
+  from {
+    clip-path: inset(6% 5%);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes asg-exp-drift {
+  from {
+    transform: translateY(-6%);
+  }
+  to {
+    transform: translateY(6%);
+  }
+}
+
+/* Opening the viewer: a quick fade where `@starting-style` is supported. */
+.asg-exp-viewer[open] {
+  transition: opacity 280ms ease;
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asg-exp-nav,
+  .asg-exp-frame__media img,
+  .asg-exp-viewer__img,
+  .asg-exp-viewer[open] {
+    transition: none;
+  }
+}

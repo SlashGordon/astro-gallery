@@ -169,6 +169,12 @@ await shot('map-consent', map, { settle: 500 });
 await map.locator('.asg-map__consent-btn').click();
 await shot('map-gallery', map, { settle: 5000 });
 
+// Expedition takes over a whole page, so it has its own route.
+await page.goto(new globalThis.URL('expedition/', URL).href, { waitUntil: 'networkidle' });
+await shot('expedition', null, { settle: 2400, full: true });
+// An overlapping spread; the reveal needs a moment once it is in view.
+await shot('expedition-spread', '#london .asg-exp-grid', { settle: 1800 });
+
 await browser.close();
 server?.kill();
 

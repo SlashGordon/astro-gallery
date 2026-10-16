@@ -1,0 +1,27 @@
+---
+import Expedition from 'astro-gallery/components/expedition/Expedition.astro';
+import { chapters, closing, hero, interludes, navigation } from '../../data/expedition';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Endless Expedition — astro-gallery</title>
+    <meta
+      name="description"
+      content="A brutalist travel publication built from the astro-gallery Expedition components."
+    />
+  </head>
+  <body>
+    <Expedition
+      brand="Endless Expedition"
+      hero={hero}
+      chapters={chapters}
+      interludes={interludes}
+      closing={closing}
+      navigation={navigation}
+    />
+  </body>
+</html>

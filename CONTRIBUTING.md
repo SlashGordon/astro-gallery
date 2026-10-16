@@ -14,6 +14,10 @@ npm install
 npm --prefix demo install   # once, for the playground
 ```
 
+`npm install` points git at the hooks in `.githooks/`. The pre-commit hook runs
+Prettier on the staged files, the pre-push hook runs `npm run format:check`.
+Skip them once with `--no-verify`.
+
 ## Handy scripts
 
 | Command                | What it does                                                                                                                          |

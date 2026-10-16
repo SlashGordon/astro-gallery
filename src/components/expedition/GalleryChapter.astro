@@ -1,0 +1,155 @@
+---
+/**
+ * A destination chapter: an oversized section number, the destination set in
+ * display type, a dotted route, an introduction, and the photos composed as an
+ * asymmetric grid or a sideways sequence.
+ *
+ * Pass a `TravelChapter` to use it on its own (explicit images or
+ * `folderPath`), or the already-resolved chapter that `Expedition` hands it.
+ */
+import type { ImageMetadata } from 'astro';
+import config from 'virtual:astro-gallery/config';
+import { resolveLabels, type ExpeditionLabelOptions } from '../../internal/expedition/labels.js';
+import { expeditionWidths, resolveChapters } from '../../internal/expedition/resolve.js';
+import type { ResolvedChapter, TravelChapter } from '../../internal/expedition/types.js';
+import BrutalistImageGrid from './BrutalistImageGrid.astro';
+import TravelImage from './TravelImage.astro';
+import '../../styles/expedition.css';
+
+interface Props {
+  chapter: TravelChapter | ResolvedChapter;
+  /** Chapter number when used on its own. Default `1`. */
+  number?: number;
+  /** Frames in the whole expedition. Defaults to this chapter's own count. */
+  total?: number;
+  /** Override the integration's `imagesDir` (folder mode). */
+  baseDir?: string;
+  locale?: string;
+  labels?: ExpeditionLabelOptions;
+}
+
+const {
+  chapter: input,
+  number: numberProp,
+  total: totalProp,
+  baseDir = config.imagesDir,
+  locale = config.locale,
+  labels: labelsProp,
+} = Astro.props;
+
+const labels = resolveLabels(labelsProp, locale);
+
+let chapter: ResolvedChapter;
+if ('number' in input && Array.isArray(input.images) && input.images.every((i) => 'frame' in i)) {
+  chapter = input as ResolvedChapter;
+} else {
+  const allImages = import.meta.glob<{ default: ImageMetadata }>(
+    '/src/**/*.{jpg,jpeg,png,webp,avif,gif,tiff,JPG,JPEG,PNG,WEBP,AVIF,GIF,TIFF}',
+    { eager: true },
+  );
+  const { chapters } = await resolveChapters([input as TravelChapter], {
+    glob: allImages,
+    baseDir,
+    widths: expeditionWidths(config.responsiveWidths),
+    format: config.imageFormat,
+    locale,
+  });
+  chapter = { ...chapters[0]!, number: numberProp ?? 1 };
+}
+
+const total = totalProp ?? chapter.images.length;
+const num = String(chapter.number).padStart(2, '0');
+const headingId = `${chapter.id}-title`;
+const isSequence = chapter.composition === 'sequence';
+---
+
+<section
+  class:list={['asg-exp-chapter', chapter.mirror && 'asg-exp-chapter--mirror']}
+  id={chapter.id}
+  aria-labelledby={headingId}
+>
+  <header class="asg-exp-chapter__head" data-asg-exp-reveal>
+    <span class="asg-exp-chapter__number asg-exp-display" aria-hidden="true">
+      {num}
+    </span>
+    <span class="asg-exp-chapter__rule" aria-hidden="true"></span>
+    <p class="asg-exp-chapter__kicker asg-exp-mono">
+      <span>
+        {labels.chapter} {num}
+      </span>
+      <span class="asg-exp-accent-text">{chapter.location}</span>
+      {chapter.coordinates && <span>{chapter.coordinates}</span>}
+    </p>
+    <h2 class="asg-exp-chapter__title asg-exp-display" id={headingId}>
+      {chapter.title}
+    </h2>
+    {(chapter.route?.length || chapter.dates) && (
+      <div class="asg-exp-chapter__facts">
+        {chapter.dates && <p class="asg-exp-mono">{chapter.dates}</p>}
+        {chapter.route && chapter.route.length > 0 && (
+          <ol class="asg-exp-route asg-exp-mono">
+            {chapter.route.map((stop) => (
+              <li>{stop}</li>
+            ))}
+          </ol>
+        )}
+      </div>
+    )}
+    {chapter.introduction && <p class="asg-exp-chapter__intro">{chapter.introduction}</p>}
+  </header>
+
+  {isSequence ? (
+    <div class="asg-exp-seq" data-asg-exp-seq data-asg-exp-reveal>
+      <div class="asg-exp-seq__bar asg-exp-mono">
+        <span aria-hidden="true">→ {labels.sequence}</span>
+        <span class="asg-exp-seq__count" data-asg-exp-seq-count aria-hidden="true">
+          01 / {String(chapter.images.length).padStart(2, '0')}
+        </span>
+        <span class="asg-exp-seq__buttons">
+          <button type="button" class="asg-exp-btn" data-asg-exp-seq-prev hidden>
+            <span aria-hidden="true">←</span>
+            <span class="asg-exp-sr">{labels.previous}</span>
+          </button>
+          <button type="button" class="asg-exp-btn" data-asg-exp-seq-next hidden>
+            <span aria-hidden="true">→</span>
+            <span class="asg-exp-sr">{labels.next}</span>
+          </button>
+        </span>
+      </div>
+      <ol
+        class="asg-exp-seq__track"
+        data-asg-exp-seq-track
+        tabindex="0"
+        aria-label={`${chapter.title}: ${labels.sequence}`}
+      >
+        {chapter.images.map((image) => (
+          <li class="asg-exp-seq__item">
+            <TravelImage
+              image={image}
+              total={total}
+              variant="sequence"
+              openLabel={labels.open}
+              frameWord={labels.frame}
+            />
+          </li>
+        ))}
+      </ol>
+    </div>
+  ) : (
+    <BrutalistImageGrid
+      images={chapter.images}
+      total={total}
+      mirror={chapter.mirror}
+      openLabel={labels.open}
+      frameWord={labels.frame}
+    />
+  )}
+</section>
+
+<script>
+  import { initReveal, initSequences, onPage } from '../../internal/expedition/client.js';
+  onPage(() => {
+    initReveal();
+    initSequences();
+  });
+</script>

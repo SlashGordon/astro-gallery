@@ -1,0 +1,62 @@
+---
+/**
+ * A cinematic pause between chapters: a near-full-screen photograph, a short
+ * statement on solid slabs and a small destination label. Where the browser
+ * supports scroll-driven animations the photo drifts slightly against the
+ * scroll; under reduced motion it holds still.
+ */
+import config from 'virtual:astro-gallery/config';
+import { toLines } from '../../internal/expedition/layout.js';
+import { ensureResolved, expeditionWidths } from '../../internal/expedition/resolve.js';
+import type { ResolvedTravelImage, TravelImage } from '../../internal/expedition/types.js';
+import '../../styles/expedition.css';
+
+interface Props {
+  statement: string | string[];
+  image: TravelImage | ResolvedTravelImage;
+  /** Small destination label. Defaults to the photo's location and date. */
+  label?: string;
+  locale?: string;
+}
+
+const { statement, image: input, label, locale = config.locale } = Astro.props;
+
+const image = await ensureResolved(
+  input,
+  { widths: expeditionWidths(config.responsiveWidths), format: config.imageFormat, locale },
+  'interlude',
+);
+const lines = toLines(statement);
+const tag = label ?? [image.location, image.date].filter(Boolean).join(' · ');
+---
+
+<section
+  class="asg-exp-interlude"
+  aria-label={tag || lines.join(' ')}
+  style={`--asg-exp-focus:${image.focus};--asg-exp-focus-sm:${image.focusMobile}`}
+  data-asg-exp-progress-off
+>
+  <div class="asg-exp-interlude__media">
+    <img
+      src={image.src}
+      srcset={image.srcset || undefined}
+      sizes={image.srcset ? '100vw' : undefined}
+      width={image.width || undefined}
+      height={image.height || undefined}
+      alt={image.alt}
+      loading="lazy"
+      decoding="async"
+    />
+  </div>
+  {tag && <p class="asg-exp-interlude__label asg-exp-mono">{tag}</p>}
+  <p class="asg-exp-interlude__statement asg-exp-display asg-exp-slab" data-asg-exp-reveal>
+    {lines.map((line, i) => (
+      <span style={`--i:${i}`}>{line}</span>
+    ))}
+  </p>
+</section>
+
+<script>
+  import { initReveal, onPage } from '../../internal/expedition/client.js';
+  onPage(() => initReveal());
+</script>

@@ -6,6 +6,7 @@ import SlideshowGallery from 'astro-gallery/components/SlideshowGallery.astro';
 import CarouselGallery from 'astro-gallery/components/CarouselGallery.astro';
 import ImageTimeline from 'astro-gallery/components/ImageTimeline.astro';
 import MapGallery from 'astro-gallery/components/MapGallery.astro';
+import { destinationHref, destinations } from '../data/expedition';
 
 const photoTitles = {
   '1.jpg': 'The field above the beach',
@@ -94,6 +95,9 @@ const photoTitles = {
         border-radius: 0 8px 8px 0;
         font-size: 0.95rem;
       }
+      ul.callout {
+        padding-left: 2.25rem;
+      }
       .theme-toggle {
         position: fixed;
         top: 1rem;
@@ -108,7 +112,9 @@ const photoTitles = {
     </style>
   </head>
   <body>
-    <button class="theme-toggle" type="button" data-theme-toggle>Toggle theme</button>
+    <button class="theme-toggle" type="button" data-theme-toggle>
+      Toggle theme
+    </button>
     <main>
       <header>
         <h1>astro-gallery</h1>
@@ -117,22 +123,26 @@ const photoTitles = {
           <code>src/assets/images/holidays/</code>. These are real holiday snapshots. Most carry
           EXIF (capture date + GPS), so the timeline and the map have something to work with. A few
           are messenger exports with the metadata stripped, so they land in the timeline's
-          <code>Undated</code> group and never on the map. View source for the semantic markup and the
-          JSON-LD.
+          <code>Undated</code> group and never on the map. View source for the semantic markup and
+          the JSON-LD.
+        </p>
+        <p>
+          The same photos as a whole publication: <a href="/expedition/">Endless Expedition</a>,
+          built from the Expedition components.
         </p>
       </header>
 
       <p class="callout">
-        The next two sections render the <strong>same thirteen photos</strong> — a mix of landscape and
-        portrait, shot on different trips. Only the <em>layout</em> differs.
+        The next two sections render the <strong>same thirteen photos</strong> — a mix of landscape
+        and portrait, shot on different trips. Only the <em>layout</em> differs.
       </p>
 
       <h2>&lt;JustifiedGallery /&gt;</h2>
       <p>
         Rows are justified to the container width using each photo's aspect ratio, so a panorama
         takes more room than a portrait and nothing is cropped. Plus responsive <code>srcset</code>,
-        blur-up skeletons, <code>content-visibility</code> and JSON-LD. Two of the photos below have a
-        <code>caption</code> — hover or focus them to see it.
+        blur-up skeletons, <code>content-visibility</code> and JSON-LD. Two of the photos below have
+        a<code>caption</code> — hover or focus them to see it.
       </p>
       <JustifiedGallery
         folderPath="holidays"
@@ -152,7 +162,8 @@ const photoTitles = {
       <p>
         The same photos in a uniform four-column grid. Every cell is identical, so each image is
         cropped to fill it — the panorama and the portraits all become the same rectangle. Here the
-        <code>caption</code> renders as an always-visible <code>&lt;figcaption&gt;</code> under the image.
+        <code>caption</code> renders as an always-visible <code>&lt;figcaption&gt;</code> under the
+        image.
       </p>
       <ImageGallery
         folderPath="holidays"
@@ -165,8 +176,8 @@ const photoTitles = {
       />
 
       <p>
-        <code>variant="masonry"</code> keeps every photo's own aspect ratio instead of cropping to a uniform
-        cell and the caption moves to a hover scrim riding on the image:
+        <code>variant="masonry"</code> keeps every photo's own aspect ratio instead of cropping to a
+        uniform cell and the caption moves to a hover scrim riding on the image:
       </p>
       <ImageGallery
         folderPath="holidays"
@@ -247,9 +258,9 @@ const photoTitles = {
       <h2>&lt;SlideshowGallery /&gt;</h2>
       <p>
         One photo at a time on a translate-driven track — nothing animates but a single
-        <code>transform</code> and some opacity, on an expo-out curve that starts fast and settles slowly.
-        Drag it with a mouse or a finger and the track follows you 1:1. Hover the image or tab to the
-        slideshow and use <kbd>←</kbd> / <kbd>→</kbd>, to raise the glass caption card.
+        <code>transform</code> and some opacity, on an expo-out curve that starts fast and settles
+        slowly. Drag it with a mouse or a finger and the track follows you 1:1. Hover the image or
+        tab to the slideshow and use <kbd>←</kbd> / <kbd>→</kbd>, to raise the glass caption card.
       </p>
       <SlideshowGallery
         folderPath="holidays"
@@ -287,10 +298,9 @@ const photoTitles = {
       />
 
       <p>
-        <code>captionMode="always"</code> pins the card open, <code>autoplay</code> adds a timed advance
-        with a pause control (and never starts under <code>prefers-reduced-motion</code>) and <code
-          >radius</code
-        > / <code>aspectRatio</code> reshape the stage:
+        <code>captionMode="always"</code> pins the card open, <code>autoplay</code> adds a timed
+        advance with a pause control (and never starts under <code>prefers-reduced-motion</code>)
+        and <code>radius</code> / <code>aspectRatio</code> reshape the stage:
       </p>
       <SlideshowGallery
         folderPath="holidays"
@@ -340,12 +350,14 @@ const photoTitles = {
       <h2>&lt;ImageTimeline /&gt;</h2>
       <p>
         Grouped by EXIF capture day; photos without a date fall into an
-        <code>Undated</code> group at the end. <code>orientation="horizontal"</code> (default) puts the
-        days in a rail you scroll sideways:
+        <code>Undated</code> group at the end. <code>orientation="horizontal"</code> (default) puts
+        the days in a rail you scroll sideways:
       </p>
       <ImageTimeline folderPath="holidays" album="Holiday snapshots" />
 
-      <p><code>orientation="vertical"</code> stacks them down the page on a left-hand spine:</p>
+      <p>
+        <code>orientation="vertical"</code> stacks them down the page on a left-hand spine:
+      </p>
       <ImageTimeline folderPath="holidays" album="Holiday snapshots" orientation="vertical" />
 
       <h2>&lt;MapGallery /&gt;</h2>
@@ -357,11 +369,33 @@ const photoTitles = {
       <MapGallery folderPath="holidays" album="Holiday snapshots" />
 
       <p>
-        <code>basemap="esri-satellite"</code> — a different (keyless) style; the preset also forces the
-        map controls dark. CARTO / Stadia dark presets work the same way but need a
+        <code>basemap="esri-satellite"</code> — a different (keyless) style; the preset also forces
+        the map controls dark. CARTO / Stadia dark presets work the same way but need a
         <code>tileApiKey</code>.
       </p>
       <MapGallery folderPath="holidays" album="Holiday snapshots" basemap="esri-satellite" />
+
+      <h2>&lt;Expedition /&gt;</h2>
+      <p>
+        A whole brutalist travel publication from one data object: an opening statement, destination
+        chapters composed as asymmetric spreads, full-screen interludes, a closing sequence and a
+        modal viewer. It takes over the whole page, so it has its own demo pages, all built from
+        <code>src/data/expedition.ts</code>:
+      </p>
+      <ul class="callout">
+        <li>
+          <a href="/expedition/">
+            <strong>Endless Expedition</strong>
+          </a>
+          : the full publication, all three chapters with an interlude between them.
+        </li>
+        {destinations.map((d) => (
+          <li>
+            <a href={destinationHref(d.slug)}>{d.chapter.title}</a>: one destination on its own
+            page, {d.meta}.
+          </li>
+        ))}
+      </ul>
     </main>
 
     <script>

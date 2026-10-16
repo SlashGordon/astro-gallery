@@ -1,0 +1,39 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Expedition from 'astro-gallery/components/expedition/Expedition.astro';
+import { closingFor, destinations, navigationFor, type Destination } from '../../data/expedition';
+
+export const getStaticPaths = (() =>
+  destinations.map((destination) => ({
+    params: { destination: destination.slug },
+    props: { destination },
+  }))) satisfies GetStaticPaths;
+
+interface Props {
+  destination: Destination;
+}
+
+const { destination } = Astro.props;
+const { chapter, hero } = destination;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{chapter.title} — Endless Expedition</title>
+    {chapter.introduction && <meta name="description" content={chapter.introduction} />}
+  </head>
+  <body>
+    <Expedition
+      brand="Endless Expedition"
+      brandHref="/expedition/"
+      hero={hero}
+      chapters={[chapter]}
+      closing={closingFor(destination.slug)}
+      navigation={navigationFor(true)}
+      progress={false}
+    />
+  </body>
+</html>

@@ -1,0 +1,12 @@
+#!/bin/sh
+# Format staged files with Prettier so `npm run format:check` passes in CI.
+# Note: re-stages whole files, so partially staged files get committed in full.
+
+if [ -z "$(git diff --cached --name-only --diff-filter=ACMR)" ]; then
+  exit 0
+fi
+
+git diff --cached --name-only -z --diff-filter=ACMR |
+  xargs -0 npx --no-install prettier --write --ignore-unknown --log-level warn || exit 1
+
+git diff --cached --name-only -z --diff-filter=ACMR | xargs -0 git add
