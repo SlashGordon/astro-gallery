@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0](https://github.com/SlashGordon/astro-gallery/compare/v1.3.0...v1.4.0) (2026-10-16)
+
+
+### Features
+
+* added expedition gallery ([01c6f07](https://github.com/SlashGordon/astro-gallery/commit/01c6f07ce89b967745e9a3663ba5a9fd7585616f))
+
 ## [1.3.0](https://github.com/SlashGordon/astro-gallery/compare/v1.2.1...v1.3.0) (2026-10-16)
 
 
