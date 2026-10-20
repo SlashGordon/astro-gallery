@@ -18,6 +18,7 @@ Point a component at a folder in `src/`, drop your photos in, done:
 <EditorialGallery folderPath="trips/rome" album="Rome, 2024" />
 <SlideshowGallery folderPath="trips/rome" album="Rome, 2024" />
 <CarouselGallery folderPath="trips/rome" album="Rome, 2024" />
+<AccordionGallery folderPath="trips/rome" album="Rome, 2024" />
 <ImageTimeline folderPath="trips/rome" />
 <MapGallery folderPath="trips/rome" />
 ```
@@ -29,6 +30,7 @@ Point a component at a folder in `src/`, drop your photos in, done:
 | `EditorialGallery` | The justified layout with a two-pane fullscreen reader: photo left, caption panel right (title, caption, date, camera, place, pixel size), filmstrip, collapsible panel.                                 |
 | `SlideshowGallery` | One photo at a time on a translate-driven track, with a glassmorphism caption card that rises on hover or focus. Pointer drag, keyboard, dots, optional autoplay with a pause control.                   |
 | `CarouselGallery`  | A fanned stack of prints: the centre photo full-size, neighbours peeking in perspective. Click a peek, drag or use the arrows; the caption docks below the stage instead of riding on the photo.         |
+| `AccordionGallery` | A straight row of full-height panels, one open at a configurable share of the width. Hover or focus a strip to unfold it; click the open photo for the lightbox. Titles run up the closed strips.        |
 | `ImageTimeline`    | Reads each photo's EXIF capture date, groups by day and lays the days out on a timeline — a horizontal scrolling rail or a vertical spine (`<ol>` + `<time>`). Optional reverse-geocoded location label. |
 | `MapGallery`       | Reads GPS EXIF, drops a circular photo marker per location on a Leaflet map. Consent gate, so no external tile request happens before the visitor agrees; crawlable fallback.                            |
 | `Expedition`       | A whole brutalist travel publication from one data object: hero, chapters composed as asymmetric spreads, interludes, closing sequence, modal viewer. See [Expedition](#expedition).                     |
@@ -92,6 +94,7 @@ import ImageGallery from 'astro-gallery/components/ImageGallery.astro';
 import EditorialGallery from 'astro-gallery/components/EditorialGallery.astro';
 import SlideshowGallery from 'astro-gallery/components/SlideshowGallery.astro';
 import CarouselGallery from 'astro-gallery/components/CarouselGallery.astro';
+import AccordionGallery from 'astro-gallery/components/AccordionGallery.astro';
 import ImageTimeline from 'astro-gallery/components/ImageTimeline.astro';
 import MapGallery from 'astro-gallery/components/MapGallery.astro';
 ---
@@ -390,6 +393,67 @@ Retheme through the custom properties on `.asg-carousel`: `--asg-car-ar`,
 
 Under `prefers-reduced-motion` the card and nav transitions are dropped
 (navigation is instant) and autoplay never starts.
+
+### `AccordionGallery`
+
+A straight row of full-height panels, one of them open. The open photo takes a
+share of the row you set with `expand` (half by default) and the others
+squeeze into equal strips beside it. Hovering or focusing a strip unfolds it
+and the previous one closes, a click on the open photo shows it full size in
+the lightbox. Nothing tilts or curves: every panel keeps the full row height.
+
+The caption sits on the photo. On a closed strip the title runs up the strip
+like a book spine, small and spaced out. When the panel opens, the spine fades
+and a title line plus a caption paragraph slide in at the lower-left corner
+over a soft scrim, a beat after the panel has widened. `spines={false}` keeps
+the closed strips as pure photo, which suits a handful of wide panels:
+
+![AccordionGallery with spines off — four photos, the second one open](docs/screenshots/accordion-gallery-plain.jpg)
+
+![AccordionGallery — the first photo open at half width, titled strips beside it](docs/screenshots/accordion-gallery.jpg)
+
+```astro
+<AccordionGallery
+  folderPath="trips/rome"
+  album="Rome, 2024"
+  height={440}
+  expand={0.55}
+  titles={{ 'piazza-navona.jpg': 'Fountain of the Four Rivers' }}
+  captions={{ 'piazza-navona.jpg': 'Bernini, 1651 — best an hour before sunset.' }}
+/>
+```
+
+Only `flex-grow` animates: closed panels grow by 1, the open one by a number
+the component works out from `expand` and the photo count, so the share is
+exact however many photos there are. The first panel is marked open in the
+HTML, so the layout is right before any script runs; without JavaScript the
+links still open the full-size file. On touch screens the first tap on a strip
+opens it and the second tap opens the lightbox. Below `640px` the row turns on
+its side and the panels stack.
+
+| Prop                          | Type                                | Default                | Notes                                                    |
+| ----------------------------- | ----------------------------------- | ---------------------- | -------------------------------------------------------- |
+| `folderPath`                  | `string`                            | –                      | Folder relative to `src/<imagesDir>/`.                   |
+| `images`                      | `{ src, alt?, title?, caption? }[]` | –                      | Use instead of `folderPath`.                             |
+| `baseDir`                     | `string`                            | `imagesDir`            | Override the base folder.                                |
+| `height`                      | `number`                            | `480`                  | Maximum row height in px; shrinks with the viewport.     |
+| `expand`                      | `number`                            | `0.5`                  | Share of the row the open photo takes, `0.2`–`0.9`.      |
+| `gap`                         | `string`                            | `0.4rem`               | CSS gap between panels.                                  |
+| `radius`                      | `string`                            | `var(--asg-radius-sm)` | Corner radius of each panel.                             |
+| `eager`                       | `number`                            | `2`                    | First N images load eagerly with `fetchpriority="high"`. |
+| `lightbox`                    | `boolean`                           | `true`                 | Open the full-size photo in the built-in lightbox.       |
+| `spines`                      | `boolean`                           | `true`                 | Run the title up each closed strip.                      |
+| `alt` / `captions` / `titles` | `Record<string,string>`             | `{}`                   | Per-file overrides (folder mode).                        |
+| `album`                       | `string`                            | –                      | Accessible label, fallback `alt`, JSON-LD `name`.        |
+| `sizes`                       | `string`                            | open panel's share     | `<img sizes>` attribute.                                 |
+| `structuredData`              | `boolean`                           | integration setting    | Emit `ImageGallery` JSON-LD.                             |
+
+Retheme through the custom properties on `.asg-accordion`: `--asg-acc-h`,
+`--asg-acc-grow`, `--asg-acc-gap`, `--asg-acc-radius`, `--asg-acc-duration`,
+`--asg-acc-ease` and `--asg-acc-scrim` (the gradient behind the caption).
+
+Under `prefers-reduced-motion` the fold and the caption transitions are
+dropped, so a hover switches panels instantly.
 
 ### `ImageTimeline`
 
@@ -716,10 +780,13 @@ these show a shortened label instead) — and also feed the
 lightbox caption and the JSON-LD `caption`. In `EditorialGallery` the caption
 is the panel's body text; in `SlideshowGallery` it's the glass card that rises
 over the photo or a strip below it on a narrow stage; in `CarouselGallery` it's a docked strip below the stage that
-crossfades as the centre print changes. Three ways to set them:
+crossfades as the centre print changes; in `AccordionGallery` the title runs up
+each closed strip (unless `spines={false}`) and the open panel shows title and
+caption over a scrim.
+Three ways to set them:
 
 **Folder mode — the `captions` prop** (`JustifiedGallery`, `ImageGallery`,
-`EditorialGallery`, `SlideshowGallery`, `CarouselGallery`). A map of _file
+`EditorialGallery`, `SlideshowGallery`, `CarouselGallery`, `AccordionGallery`). A map of _file
 name_ → caption; files you omit have none:
 
 ```astro

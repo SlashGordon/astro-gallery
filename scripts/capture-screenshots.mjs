@@ -149,6 +149,16 @@ const carousel = page.locator('.asg-carousel').first();
 await carousel.scrollIntoViewIfNeeded();
 await shot('carousel-gallery', carousel, { settle: 900 });
 
+// Accordion: the first photo open at half width, the title strips beside it.
+const accordion = page.locator('.asg-accordion').first();
+await accordion.scrollIntoViewIfNeeded();
+await shot('accordion-gallery', accordion, { settle: 900 });
+// Four photos, no spines, second panel open.
+const plain = page.locator('.asg-accordion--plain').first();
+await plain.scrollIntoViewIfNeeded();
+await plain.locator('.asg-accordion__panel').nth(1).hover();
+await shot('accordion-gallery-plain', plain, { settle: 1100 });
+
 // The timeline reserves rail height for its tallest day, so trim the slack.
 await shot('image-timeline', page.locator('.asg-timeline--horizontal').first(), { trim: true });
 await shot('image-timeline-vertical', page.locator('.asg-timeline--vertical').first(), {

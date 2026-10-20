@@ -1,0 +1,273 @@
+---
+/**
+ * A straight row of full-height panels, one of them open. The open panel takes
+ * a configurable share of the row (`expand`), the others squeeze into equal
+ * strips beside it. Hovering or focusing a strip opens it, the previous one
+ * folds shut, and a click on the open photo shows it full size in the
+ * lightbox. No perspective, no curve: every panel keeps the full row height.
+ *
+ * The caption lives on the photo: the title runs up the strip of a closed
+ * panel like a book spine (`spines`, on by default), and when the panel opens
+ * it turns into a title line and a caption paragraph in the lower-left corner
+ * over a soft scrim.
+ */
+import { readFile } from 'node:fs/promises';
+import type { ImageMetadata } from 'astro';
+import config from 'virtual:astro-gallery/config';
+import { accordionGrow, clampExpand } from '../internal/accordion-layout.js';
+import { resolveAlt } from '../internal/alt.js';
+import { readPhotoMeta } from '../internal/exif.js';
+import { fixedImage, responsiveImage } from '../internal/images.js';
+import { basename, resolveFolder, selectFolderEntries, toAbsolute } from '../internal/paths.js';
+import { imageGalleryJsonLd, type LdImage } from '../internal/structured-data.js';
+import '../styles/gallery.css';
+
+type ImageInput = {
+  /** An `import`ed image, a `/public` path or a remote URL. */
+  src: string | ImageMetadata;
+  alt?: string;
+  title?: string;
+  caption?: string;
+};
+
+interface Props {
+  /** Folder relative to `src/<imagesDir>/` — every image inside is used, sorted by name. */
+  folderPath?: string;
+  /** Explicit images. Use this or `folderPath`, not both. */
+  images?: ImageInput[];
+  /** Override the integration's `imagesDir` for this instance. */
+  baseDir?: string;
+  /** Maximum row height in px; the row shrinks with the viewport below it. Default `480`. */
+  height?: number;
+  /** Share of the row the open photo takes, `0.2`–`0.9`. Default `0.5`. */
+  expand?: number;
+  /** CSS gap between panels. Default `0.4rem`. */
+  gap?: string;
+  /** Corner radius of each panel. Default `var(--asg-radius-sm)`. */
+  radius?: string;
+  /** First N images load eagerly with high priority. Default `2`. */
+  eager?: number;
+  /** Open the full-size photo in the built-in lightbox on click. Default `true`. */
+  lightbox?: boolean;
+  /** Run the title up each closed strip like a book spine. Default `true`. */
+  spines?: boolean;
+  /** Per-file alt overrides (folder mode), keyed by file name. */
+  alt?: Record<string, string>;
+  /** Per-file caption overrides (folder mode), keyed by file name. */
+  captions?: Record<string, string>;
+  /** Per-file title overrides (folder mode), keyed by file name. */
+  titles?: Record<string, string>;
+  /** Album / gallery name — accessible label, fallback alt and JSON-LD `name`. */
+  album?: string;
+  /** `<img sizes>` attribute. Defaults to the open panel's share of the viewport. */
+  sizes?: string;
+  /** Emit `ImageGallery` JSON-LD. Defaults to the integration setting. */
+  structuredData?: boolean;
+}
+
+const {
+  folderPath,
+  images,
+  baseDir = config.imagesDir,
+  height = 480,
+  expand = 0.5,
+  gap,
+  radius,
+  eager = 2,
+  lightbox = true,
+  spines = true,
+  alt: altMap = {},
+  captions = {},
+  titles = {},
+  album,
+  sizes,
+  structuredData = config.structuredData,
+} = Astro.props;
+
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/**/*.{jpg,jpeg,png,webp,avif,gif,tiff,JPG,JPEG,PNG,WEBP,AVIF,GIF,TIFF}',
+  { eager: true },
+);
+
+interface Panel {
+  src: string;
+  srcset: string;
+  fullSrc: string;
+  width: number;
+  height: number;
+  alt: string;
+  title: string;
+  caption: string;
+}
+
+const widths = config.responsiveWidths;
+const format = config.imageFormat;
+let panels: Panel[] = [];
+
+if (folderPath) {
+  const target = resolveFolder(baseDir, folderPath);
+  const matched = selectFolderEntries(allImages, target);
+  const cwd = process.cwd();
+
+  panels = await Promise.all(
+    matched.map(async ([key, mod], i): Promise<Panel> => {
+      const meta = mod.default;
+      const file = basename(key);
+
+      let description: string | null = null;
+      try {
+        description = (await readPhotoMeta(await readFile(toAbsolute(key, cwd)))).description;
+      } catch {
+        /* unreadable — no embedded description */
+      }
+
+      const [responsive, full] = await Promise.all([
+        responsiveImage(meta, { widths, format }),
+        fixedImage(meta, { width: config.fullWidth, format }),
+      ]);
+
+      const resolvedAlt = resolveAlt({
+        file,
+        explicit: altMap[file],
+        description,
+        album,
+        index: i + 1,
+      });
+
+      return {
+        src: responsive.src,
+        srcset: responsive.srcset,
+        fullSrc: full.src,
+        width: responsive.width,
+        height: responsive.height,
+        alt: resolvedAlt,
+        title: titles[file] ?? '',
+        caption: captions[file] ?? (description && description !== resolvedAlt ? description : ''),
+      };
+    }),
+  );
+} else if (images?.length) {
+  panels = await Promise.all(
+    images.map(async ({ src, alt = '', title = '', caption = '' }, i): Promise<Panel> => {
+      if (typeof src === 'string') {
+        return {
+          src,
+          srcset: '',
+          fullSrc: src,
+          width: 0,
+          height: 0,
+          alt: resolveAlt({ file: src, explicit: alt, album, index: i + 1 }),
+          title,
+          caption,
+        };
+      }
+      const [responsive, full] = await Promise.all([
+        responsiveImage(src, { widths, format }),
+        fixedImage(src, { width: config.fullWidth, format }),
+      ]);
+      return {
+        src: responsive.src,
+        srcset: responsive.srcset,
+        fullSrc: full.src,
+        width: responsive.width,
+        height: responsive.height,
+        alt: alt || resolveAlt({ file: `photo-${i + 1}`, album, index: i + 1 }),
+        title,
+        caption,
+      };
+    }),
+  );
+}
+
+const label = album ? `${album} gallery` : 'Image gallery';
+const share = clampExpand(expand);
+const grow = accordionGrow(share, panels.length);
+const imgSizes = sizes ?? `${Math.round(share * 100)}vw`;
+
+/** One line for the lightbox and the `aria-label`: title and caption together. */
+const lightboxCaption = (p: Panel): string => [p.title, p.caption].filter(Boolean).join(' — ');
+
+const jsonLd =
+  structuredData && panels.length > 0
+    ? imageGalleryJsonLd(
+        panels.map((p): LdImage => ({
+          contentUrl: p.fullSrc,
+          thumbnailUrl: p.src,
+          name: p.title || p.alt,
+          caption: p.caption || undefined,
+          width: p.width || undefined,
+          height: p.height || undefined,
+        })),
+        { name: album ?? undefined, siteUrl: Astro.site },
+      )
+    : '';
+
+const style = [
+  `--asg-acc-h:${height}px`,
+  `--asg-acc-grow:${grow}`,
+  gap ? `--asg-acc-gap:${gap}` : '',
+  radius ? `--asg-acc-radius:${radius}` : '',
+]
+  .filter(Boolean)
+  .join(';');
+---
+
+{panels.length > 0 && (
+  <>
+    <div
+      class:list={['asg-accordion', !spines && 'asg-accordion--plain']}
+      role="list"
+      aria-label={label}
+      data-asg-lightbox={lightbox ? 'true' : 'false'}
+      style={style}
+    >
+      {panels.map((p, i) => {
+        const strip = p.title || p.caption;
+        return (
+          <figure class:list={['asg-accordion__panel', i === 0 && 'is-active']} role="listitem">
+            <a
+              class="asg-accordion__item"
+              href={p.fullSrc}
+              data-asg-full={p.fullSrc}
+              data-asg-alt={p.alt}
+              data-asg-caption={lightboxCaption(p)}
+              aria-label={lightboxCaption(p) || p.alt}
+            >
+              <img
+                src={p.src}
+                srcset={p.srcset || undefined}
+                sizes={p.srcset ? imgSizes : undefined}
+                width={p.width || undefined}
+                height={p.height || undefined}
+                alt={p.alt}
+                loading={i < eager ? 'eager' : 'lazy'}
+                fetchpriority={i < eager ? 'high' : 'auto'}
+                decoding="async"
+                draggable="false"
+              />
+            </a>
+            {strip && (
+              <figcaption class="asg-accordion__caption">
+                {spines && (
+                  <span class="asg-accordion__strip" aria-hidden="true">
+                    {strip}
+                  </span>
+                )}
+                <div class="asg-accordion__body">
+                  {p.title && <p class="asg-accordion__title">{p.title}</p>}
+                  {p.caption && <p class="asg-accordion__text">{p.caption}</p>}
+                </div>
+              </figcaption>
+            )}
+          </figure>
+        );
+      })}
+    </div>
+    {jsonLd && <script type="application/ld+json" is:inline set:html={jsonLd} />}
+  </>
+)}
+
+<script>
+  import { initAccordions } from '../internal/accordion.js';
+  initAccordions();
+</script>

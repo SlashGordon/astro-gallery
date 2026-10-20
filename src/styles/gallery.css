@@ -54,6 +54,7 @@
  */
 .asg-gallery__item img,
 .asg-jgallery__item img,
+.asg-accordion__item img,
 .asg-timeline__item img,
 .asg-map__fallback img,
 .asg-map__popup-link img {
@@ -2431,5 +2432,205 @@
   }
   .asg-carousel__caption {
     animation: none;
+  }
+}
+
+/* --------------------------------------------------------------- Accordion -- */
+
+/*
+ * A straight row of full-height panels, one open. Every panel is a flex item
+ * with `flex-basis: 0`; closed panels grow by 1, the open one by
+ * `--asg-acc-grow` — a number the component works out from `expand` and the
+ * photo count so the open panel takes exactly that share of the row. Only
+ * `flex-grow` animates on hover, so the whole fold is a single property.
+ */
+.asg-accordion {
+  --asg-acc-h: 480px;
+  --asg-acc-grow: 12;
+  --asg-acc-gap: 0.4rem;
+  --asg-acc-radius: var(--asg-radius-sm);
+  --asg-acc-duration: 650ms;
+  --asg-acc-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --asg-acc-scrim: rgba(0, 0, 0, 0.78);
+
+  display: flex;
+  gap: var(--asg-acc-gap);
+  height: clamp(260px, 62vw, var(--asg-acc-h));
+  margin: 2rem 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.asg-accordion__panel {
+  position: relative;
+  flex: 1 1 0%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--asg-acc-radius);
+  background: var(--asg-surface-2);
+  transition: flex-grow var(--asg-acc-duration) var(--asg-acc-ease);
+}
+
+.asg-accordion__panel.is-active {
+  flex-grow: var(--asg-acc-grow);
+}
+
+.asg-accordion__item {
+  display: block;
+  width: 100%;
+  height: 100%;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.asg-accordion__panel.is-active .asg-accordion__item {
+  cursor: zoom-in;
+}
+
+.asg-accordion__item:focus-visible {
+  outline: 2px solid var(--asg-accent);
+  outline-offset: -3px;
+  border-radius: var(--asg-acc-radius);
+}
+
+.asg-accordion__item img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  /* Closed strips sit back a little so the open photo reads as the subject. */
+  filter: brightness(0.78) saturate(0.85);
+  transition: filter var(--asg-acc-duration) var(--asg-acc-ease);
+}
+
+.asg-accordion__panel.is-active .asg-accordion__item img {
+  filter: none;
+}
+
+/* -------------------------------------------------------------- caption --- */
+
+/*
+ * One `<figcaption>`, two faces. Closed: the title runs up the strip from the
+ * bottom. Open: a title line and a caption paragraph in the lower-left corner
+ * over a scrim, sliding in a beat after the panel has widened.
+ */
+.asg-accordion__caption {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+  color: #fff;
+  background: linear-gradient(
+    to top,
+    var(--asg-acc-scrim) 0%,
+    rgba(0, 0, 0, 0.28) 38%,
+    transparent 62%
+  );
+}
+
+.asg-accordion__strip {
+  position: absolute;
+  left: 50%;
+  bottom: 0.9rem;
+  max-height: calc(100% - 1.8rem);
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  transform: translateX(-50%) rotate(180deg);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.9;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: opacity 240ms ease;
+}
+
+.asg-accordion__panel.is-active .asg-accordion__strip {
+  opacity: 0;
+  transition-duration: 120ms;
+}
+
+/* `spines={false}`: a closed strip is just the photo, so no scrim on it. */
+.asg-accordion--plain .asg-accordion__panel:not(.is-active) .asg-accordion__caption {
+  background: none;
+}
+
+.asg-accordion__body {
+  padding: 0 clamp(0.9rem, 4%, 1.5rem) clamp(0.85rem, 3.5%, 1.3rem);
+  max-width: 34rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 260ms ease,
+    transform 260ms ease;
+}
+
+.asg-accordion__panel.is-active .asg-accordion__body {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 380ms var(--asg-acc-ease) 180ms,
+    transform 520ms var(--asg-acc-ease) 180ms;
+}
+
+.asg-accordion__title {
+  margin: 0;
+  font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.asg-accordion__text {
+  margin: 0.3rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.84);
+  text-wrap: pretty;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------ responsive -- */
+
+/*
+ * Narrow screens cannot fit a dozen strips side by side, so the accordion
+ * turns on its side: panels stack top to bottom and the open one grows tall.
+ */
+@media (max-width: 639px) {
+  .asg-accordion {
+    flex-direction: column;
+    height: min(calc(var(--asg-acc-h) * 1.3), 85svh);
+  }
+  .asg-accordion__strip {
+    left: 0.9rem;
+    bottom: 50%;
+    max-height: none;
+    max-width: calc(100% - 1.8rem);
+    writing-mode: horizontal-tb;
+    transform: translateY(50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asg-accordion__panel,
+  .asg-accordion__item img,
+  .asg-accordion__strip,
+  .asg-accordion__body {
+    transition: none;
   }
 }
