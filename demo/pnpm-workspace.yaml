@@ -1,0 +1,2 @@
+# Its own pnpm project, apart from the package in the repo root.
+nodeLinker: hoisted

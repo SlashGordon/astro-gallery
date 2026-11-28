@@ -7,8 +7,8 @@ A minimal Astro site that uses the package from the repo root
 
 ```bash
 cd demo
-npm install      # first time only
-npm run dev
+pnpm install      # first time only
+pnpm run dev
 ```
 
 Then open **http://localhost:4321**.
@@ -16,11 +16,11 @@ Then open **http://localhost:4321**.
 You can also start it from the repo root without `cd`:
 
 ```bash
-npm run demo         # dev server
-npm run demo:build   # production build (good end-to-end check)
+pnpm run demo         # dev server
+pnpm run demo:build   # production build (good end-to-end check)
 ```
 
-## What `npm run dev` does
+## What `pnpm run dev` does
 
 1. `build:lib` — rebuilds the integration (`../dist`) so your latest source is used.
 2. `generate-samples` — a fallback that writes gradient JPEGs with synthetic EXIF
@@ -41,6 +41,6 @@ layouts.
 - Reverse-geocoded place names are cached in
   [`.cache/astro-gallery/geocode.json`](./.cache/astro-gallery/) (committed), so
   the build works offline.
-- After changing library source, just re-run `npm run dev` — `build:lib` picks
+- After changing library source, just re-run `pnpm run dev` — `build:lib` picks
   it up. Vite won't hot-reload `.astro` files inside a `file:` dependency.
-- The dev server runs backgrounded (Astro 7). Stop it with `npx astro dev stop`.
+- The dev server runs backgrounded (Astro 7). Stop it with `pnpm exec astro dev stop`.

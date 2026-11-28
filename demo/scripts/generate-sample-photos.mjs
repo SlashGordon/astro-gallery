@@ -6,7 +6,7 @@
  * - Skips generation if the folder already contains images. The demo ships with
  *   real holiday photos in `demo/src/assets/images/holidays/`, so generation is a
  *   no-op unless that folder is emptied.
- * - Runs automatically before `npm run dev` / `npm run build` in the demo.
+ * - Runs automatically before `pnpm run dev` / `pnpm run build` in the demo.
  *
  * EXIF is written by sharp's native `withExif()`, so the output is always a valid
  * JPEG (no third-party byte surgery).
@@ -34,7 +34,7 @@ try {
 } catch {
   console.warn(
     '[samples] `sharp` is not installed — skipping sample generation.\n' +
-      `          Run \`npm install\` in demo/ or add your own photos to ${OUT_DIR}`,
+      `          Run \`pnpm install\` in demo/ or add your own photos to ${OUT_DIR}`,
   );
   process.exit(0);
 }

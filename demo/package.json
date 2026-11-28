@@ -4,15 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:lib": "npm --prefix .. run build",
+    "build:lib": "pnpm --dir .. run build",
     "generate-samples": "node scripts/generate-sample-photos.mjs",
-    "dev": "npm run build:lib && npm run generate-samples && astro dev",
-    "build": "npm run build:lib && npm run generate-samples && astro build",
+    "dev": "pnpm run build:lib && pnpm run generate-samples && astro dev",
+    "build": "pnpm run build:lib && pnpm run generate-samples && astro build",
     "preview": "astro preview"
   },
   "dependencies": {
     "astro": "^7.4.0",
-    "astro-gallery": "file:.."
+    "astro-gallery": "link:.."
   },
   "devDependencies": {
     "sharp": "^0.35.5"

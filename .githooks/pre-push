@@ -1,7 +1,10 @@
 #!/bin/sh
 # Same check as CI. Catches commits made with --no-verify.
 
-npm run --silent format:check || {
-  echo "Prettier check failed. Run 'npm run format', commit and push again." >&2
+# pnpm from npm's global folder, which the login shell puts on PATH only in interactive shells.
+command -v pnpm >/dev/null 2>&1 || PATH="$HOME/.npm-global/bin:$PATH"
+
+pnpm run --silent format:check || {
+  echo "Prettier check failed. Run 'pnpm run format', commit and push again." >&2
   exit 1
 }

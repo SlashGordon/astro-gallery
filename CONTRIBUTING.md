@@ -10,26 +10,26 @@ Astro 7 and needs Node 22.12+.
 ```bash
 git clone https://github.com/SlashGordon/astro-gallery
 cd astro-gallery
-npm install
-npm --prefix demo install   # once, for the playground
+pnpm install
+pnpm --dir demo install   # once, for the playground
 ```
 
-`npm install` points git at the hooks in `.githooks/`. The pre-commit hook runs
-Prettier on the staged files, the pre-push hook runs `npm run format:check`.
+`pnpm install` points git at the hooks in `.githooks/`. The pre-commit hook runs
+Prettier on the staged files, the pre-push hook runs `pnpm run format:check`.
 Skip them once with `--no-verify`.
 
 ## Handy scripts
 
-| Command                | What it does                                                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run demo`         | Start the playground in `demo/` (Astro dev server).                                                                                   |
-| `npm run demo:build`   | Production build of the playground — the best end-to-end check.                                                                       |
-| `npm test`             | Run the unit tests (Vitest).                                                                                                          |
-| `npm run typecheck`    | `tsc --noEmit` over the package sources.                                                                                              |
-| `npm run build`        | Build the integration entry to `dist/` (tsup).                                                                                        |
-| `npm run format`       | Prettier write. `npm run format:check` in CI.                                                                                         |
-| `npm run check:viewer` | Headless-browser geometry probe for the `EditorialGallery` viewer. Needs the demo running and `npx playwright install chromium` once. |
-| `npm run screenshots`  | Rebuild the README screenshots from the demo. Needs `npx playwright install chromium` and ImageMagick.                                |
+| Command                 | What it does                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run demo`         | Start the playground in `demo/` (Astro dev server).                                                                                         |
+| `pnpm run demo:build`   | Production build of the playground — the best end-to-end check.                                                                             |
+| `pnpm test`             | Run the unit tests (Vitest).                                                                                                                |
+| `pnpm run typecheck`    | `tsc --noEmit` over the package sources.                                                                                                    |
+| `pnpm run build`        | Build the integration entry to `dist/` (tsup).                                                                                              |
+| `pnpm run format`       | Prettier write. `pnpm run format:check` in CI.                                                                                              |
+| `pnpm run check:viewer` | Headless-browser geometry probe for the `EditorialGallery` viewer. Needs the demo running and `pnpm exec playwright install chromium` once. |
+| `pnpm run screenshots`  | Rebuild the README screenshots from the demo. Needs `pnpm exec playwright install chromium` and ImageMagick.                                |
 
 ## Project layout
 
@@ -54,8 +54,8 @@ in `src/internal/` where it can be unit-tested.
 
 ## Before opening a PR
 
-1. `npm run format:check && npm run typecheck && npm test`
-2. `npm run demo:build` — makes sure the components still compile in a real Astro
+1. `pnpm run format:check && pnpm run typecheck && pnpm test`
+2. `pnpm run demo:build` — makes sure the components still compile in a real Astro
    build.
 3. Add a bullet under `## [Unreleased]` in `CHANGELOG.md`.
 

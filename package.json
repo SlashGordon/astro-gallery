@@ -29,6 +29,7 @@
   "license": "MIT",
   "author": "SlashGordon",
   "type": "module",
+  "packageManager": "pnpm@12.23.0",
   "sideEffects": [
     "*.css",
     "*.astro"
@@ -58,16 +59,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:viewer": "node scripts/inspect-editorial-viewer.mjs",
-    "screenshots": "npm --prefix demo run build && node scripts/capture-screenshots.mjs",
+    "screenshots": "pnpm --dir demo run build && node scripts/capture-screenshots.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "dev:demo": "npm --prefix demo run dev",
-    "demo": "npm --prefix demo run dev",
-    "demo:build": "npm --prefix demo run build",
-    "prepare": "git config core.hooksPath .githooks || true && npm run build"
-  },
-  "overrides": {
-    "esbuild": "^0.28.2"
+    "dev:demo": "pnpm --dir demo run dev",
+    "demo": "pnpm --dir demo run dev",
+    "demo:build": "pnpm --dir demo run build",
+    "prepare": "git config core.hooksPath .githooks || true && pnpm run build"
   },
   "peerDependencies": {
     "astro": ">=4.0.0"

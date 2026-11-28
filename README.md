@@ -1017,7 +1017,7 @@ There's a walkthrough of the components at [slashgordon.link](https://www.slashg
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md). There is a runnable playground in
-[`demo/`](./demo) — `npm run demo` from the repo root.
+[`demo/`](./demo) — `pnpm run demo` from the repo root.
 
 ## License
 

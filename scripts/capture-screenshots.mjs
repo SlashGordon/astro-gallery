@@ -9,7 +9,7 @@
  * Starts `astro preview` itself if nothing is already serving, so the usual
  * invocation is just:
  *
- *   npm run screenshots
+ *   pnpm run screenshots
  *
  * Pass a URL to shoot an already-running server instead.
  */
@@ -37,8 +37,8 @@ async function ensureServer() {
 
   console.log('starting astro preview…');
   const child = spawn(
-    'npx',
-    ['astro', 'preview', '--port', new globalThis.URL(URL).port || '4331'],
+    'pnpm',
+    ['exec', 'astro', 'preview', '--port', new globalThis.URL(URL).port || '4331'],
     {
       cwd: 'demo',
       stdio: 'ignore',

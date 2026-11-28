@@ -1,0 +1,8 @@
+# pnpm settings of this package. node_modules stays flat like npm's.
+nodeLinker: hoisted
+# One esbuild for astro (vite) and tsup, as the npm overrides field did.
+overrides:
+  esbuild: ^0.28.2
+# esbuild's install script stays off, as under npm with ignore-scripts: it finds its binary in its optional dependencies.
+allowBuilds:
+  esbuild: false
